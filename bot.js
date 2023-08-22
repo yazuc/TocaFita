@@ -5,6 +5,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 const cron = require('node-cron'); // Import the node-cron package
 
+console.log(new Date().getDate());
 
 client.on('ready', () => {
   console.log('Bot is ready');
@@ -50,6 +51,10 @@ client.on('messageCreate', async (message) => {
     message.channel.send(rolesMessage);
   }
 
+  if (message.content === '!fabriciorole') {
+    trocaRole();
+  }
+
   if (message.content === '!fabricio') {
     fetchUsernameById(message.channel, '248562627301736448');
   }
@@ -82,12 +87,32 @@ function getMentionedUserRoles(message) {
   return `${mentionedUser.user.username} has the following roles: ${userRoles.join(', ')}`;
 }
 
+const fs = require('fs');
+const path = require('path');
+
+const csvFilePath = path.join(__dirname, 'ultimaData.csv');
+
+function loadCSV(){
+    fs.readFile(csvFilePath, 'utf8', (err, csvContent) => {
+      if (err) {
+        console.error('Error reading CSV file:', err);
+        return;
+      }
+    
+      console.log('CSV Content:', csvContent);
+    });
+}
+
+const result = loadCSV();
+let hoje = new Date().getDate();
+
+console.log(result)
+console.log(hoje + " esse é o número que hoje retorna")
+
 //melhorar complexidade e arrumar funcionalidade
 async function trocaRole() {
-  const result = await lib.discord.channels['@0.2.1'].messages.retrieve({
-    message_id: '897749891177152542',
-    channel_id: '894082247567769630'
-  });
+  const result = loadCSV();
+  let hoje = new Date().getDate();
 
   if (result.content.localeCompare(hoje) != 0) {
     const roles = [ 'Manage channels', 'Manage roles', 'Manage messages', 'Move members'
