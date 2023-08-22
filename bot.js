@@ -1,12 +1,21 @@
+#!/usr/bin/env node
+
 require('dotenv').config();
 
+//Instancia a API do axios
 const axios = require('axios');
+
+//Instancia a API do discord
 const { Client, GatewayIntentBits } = require('discord.js');
+
+//Instancia um cliente novo para realizar login no discord
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+
+//Instancia cron para realizar uma tarefa agendada
 const cron = require('node-cron'); // Import the node-cron package
 
-console.log(new Date().getDate());
-
+//Método watcher, serve para mostrar que o bot está ativo, e para setar o evento marcado as 13:20
+//Para realizar a trocade roles do Fabricio
 client.on('ready', () => {
   console.log('Bot is ready');
 
@@ -19,6 +28,7 @@ client.on('ready', () => {
   });
 });
 
+//Event watcher de exemplo
 client.on('messageCreate', async (message) => {
     if (message.content === 'ping') {
         message.reply({
@@ -35,6 +45,7 @@ client.on('messageCreate', async (message) => {
     }
 })
 
+//Event watcher para os comandos específicos do bot
 client.on('messageCreate', async (message) => {
   if (message.content === '!getroles') {
     const userRoles = getUserRoles(message.member);
