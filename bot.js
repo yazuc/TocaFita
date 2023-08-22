@@ -6,11 +6,6 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 const cron = require('node-cron'); // Import the node-cron package
 
 
-
-client.on('ready', () => {
-    console.log('bot is ready');
-})
-
 client.on('ready', () => {
   console.log('Bot is ready');
 
@@ -40,7 +35,6 @@ client.on('messageCreate', async (message) => {
 })
 
 client.on('messageCreate', async (message) => {
-  console.log("method was called")
   if (message.content === '!getroles') {
     const userRoles = getUserRoles(message.member);
 
@@ -96,7 +90,8 @@ async function trocaRole() {
   });
 
   if (result.content.localeCompare(hoje) != 0) {
-    const roles = [role1, role2, role3, role4, role5, role6, role7, role8];
+    const roles = [ 'Manage channels', 'Manage roles', 'Manage messages', 'Move members'
+    , 'Manage emojis', 'View audit log', 'Deafen members', 'Mute members'];
     const permissions = [16, 268435456, 8192, 16777216, 1073741824, 128, 8388608, 4194304];
 
     if (intNumber >= 1 && intNumber <= 8) {
