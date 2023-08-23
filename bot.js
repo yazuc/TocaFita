@@ -110,7 +110,8 @@ function loadCSV(){
         return;
       }
     
-      console.log('CSV Content:', csvContent);
+      //console.log('CSV Content:', csvContent);
+      return csvContent.toString();
     });
 }
 
@@ -120,8 +121,7 @@ function gerarNumeroAleatorio() {
 
 let hoje = new Date().getDate();
 
-const result = loadCSV();
-console.log(result)
+
 
 console.log(hoje + " esse é o número que hoje retorna")
 
@@ -142,7 +142,10 @@ async function trocaRole(message) {
     'Manage emojis', 'View audit log', 'Deafen members', 'Mute members'
   ];
   const permissions = [16, 268435456, 8192, 16777216, 1073741824, 128, 8388608, 4194304];
-  if(hoje != result){
+  console.log(hoje.toString())
+  let result = loadCSV();
+  console.log(result)
+  if(hoje.toString() != result){
     if (intNumber >= 1 && intNumber <= roles.length) {
       const roleName = roles[intNumber - 1];
       const rolePermissions = permissions[intNumber - 1];
@@ -163,6 +166,8 @@ async function trocaRole(message) {
         console.log('Role not found.');
       }
     }
+  }else{
+    await message.channel.send(`O poder de <@${UserIDRoleChange.toString()}> já foi alterado hoje.`);
   }
 }
 
