@@ -20,10 +20,11 @@ client.on('ready', () => {
   console.log('Bot is ready');
 
   // Schedule the message to be sent at 2:00 PM every day (change the time as needed)
-  cron.schedule('20 13 * * *', () => {
-    const channel = client.channels.cache.get('894082247567769630'); // Replace with your channel ID
+  cron.schedule('34 11 * * *', () => {
+    const channel = client.channels.cache.get('1143699866883735592'); // Replace with your channel ID
     if (channel) {
-      channel.send('Essa mensagem foi enviada por um agendador as 13:20.');
+      channel.send('Iniciando troca de poderes.');
+      trocaRole(channel);
     }
   });
 });
@@ -132,7 +133,7 @@ const RoleTarget = process.env.RoleTarget;
 
 
 //melhorar complexidade e arrumar funcionalidade
-async function trocaRole(message) {
+async function trocaRole(channel) {
   const intNumber = gerarNumeroAleatorio();
   const role = await client.guilds.cache.get(GuildID)?.roles.cache.get(roleID);
   const hoje = new Date().getDate();
@@ -150,7 +151,7 @@ async function trocaRole(message) {
       const roleName = roles[intNumber - 1];
       const rolePermissions = permissions[intNumber - 1];
 
-      await message.channel.send(`O poder do <@${UserIDRoleChange.toString()}> hoje é: ${roleName}`);
+      await channel.send(`O poder do <@${UserIDRoleChange.toString()}> hoje é: ${roleName}`);
 
       if (role) {
         try {
@@ -167,7 +168,7 @@ async function trocaRole(message) {
       }
     }
   }else{
-    await message.channel.send(`O poder de <@${UserIDRoleChange.toString()}> já foi alterado hoje.`);
+    await channel.send(`O poder de <@${UserIDRoleChange.toString()}> já foi alterado hoje.`);
   }
 }
 
