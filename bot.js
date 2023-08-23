@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+
 require('dotenv').config();
 
 //Instancia a API do axios
