@@ -6,7 +6,7 @@ require('dotenv').config();
 const axios = require('axios');
 
 //Instancia a API do discord
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Guild } = require('discord.js');
 
 //Instancia um cliente novo para realizar login no discord
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
@@ -63,7 +63,7 @@ client.on('messageCreate', async (message) => {
   }
 
   if (message.content === '!fabriciorole') {
-    trocaRole();
+    trocaRole(message);
   }
 
   if (message.content === '!fabricio') {
@@ -114,52 +114,56 @@ function loadCSV(){
     });
 }
 
-const result = loadCSV();
-let hoje = new Date().getDate();
-
-console.log(result)
-console.log(hoje + " esse é o número que hoje retorna")
-
-//melhorar complexidade e arrumar funcionalidade
-async function trocaRole() {
-  const result = loadCSV();
-  let hoje = new Date().getDate();
-
-  if (result.content.localeCompare(hoje) != 0) {
-    const roles = [ 'Manage channels', 'Manage roles', 'Manage messages', 'Move members'
-    , 'Manage emojis', 'View audit log', 'Deafen members', 'Mute members'];
-    const permissions = [16, 268435456, 8192, 16777216, 1073741824, 128, 8388608, 4194304];
-
-    if (intNumber >= 1 && intNumber <= 8) {
-      const roleName = `Fabrício`;
-      const rolePermissions = permissions[intNumber - 1];
-
-      await lib.discord.channels['@0.2.0'].messages.create({
-        channel_name: 'bots',
-        content: `O poder do <@248562627301736448> hoje é: ${roles[intNumber - 1]}`,
-      });
-
-      await lib.discord.guilds['@0.1.0'].roles.update({
-        role_id: '887726789567320126',
-        guild_id: '542112575819612162',
-        name: roleName,
-        permissions: rolePermissions,
-      });
-
-      await lib.discord.channels['@0.2.1'].messages.update({
-        message_id: '897749891177152542',
-        channel_id: '894082247567769630',
-        content: hoje
-      });
-    }
-  } else {
-    await lib.discord.channels['@0.2.0'].messages.create({
-      channel_name: 'bots',
-      content: 'O <@248562627301736448> já rolou sua role hoje ',
-    });
-  }
+function gerarNumeroAleatorio() {
+  return Math.floor(Math.random() * 8) + 1;
 }
 
+let hoje = new Date().getDate();
 
+const result = loadCSV();
+console.log(result)
+
+console.log(hoje + " esse é o número que hoje retorna")
+
+const roleID = process.env.roleID;
+const GuildID = process.env.GuildID;
+const UserIDRoleChange = process.env.UserIDRoleChange;
+const RoleTarget = process.env.RoleTarget;
+
+
+//melhorar complexidade e arrumar funcionalidade
+async function trocaRole(message) {
+  const intNumber = gerarNumeroAleatorio();
+  const role = await client.guilds.cache.get(GuildID)?.roles.cache.get(roleID);
+  const hoje = new Date().getDate();
+
+  const roles = [
+    'Manage channels', 'Manage roles', 'Manage messages', 'Move members',
+    'Manage emojis', 'View audit log', 'Deafen members', 'Mute members'
+  ];
+  const permissions = [16, 268435456, 8192, 16777216, 1073741824, 128, 8388608, 4194304];
+  if(hoje != result){
+    if (intNumber >= 1 && intNumber <= roles.length) {
+      const roleName = roles[intNumber - 1];
+      const rolePermissions = permissions[intNumber - 1];
+
+      await message.channel.send(`O poder do <@${UserIDRoleChange.toString()}> hoje é: ${roleName}`);
+
+      if (role) {
+        try {
+          await role.edit({
+            name: roleName,
+            permissions: rolePermissions.toString(),
+          });
+          console.log(`Role "${roleName}" updated successfully.`);
+        } catch (error) {
+          console.error('Error updating role:', error);
+        }
+      } else {
+        console.log('Role not found.');
+      }
+    }
+  }
+}
 
 client.login(process.env.DISCORD_BOT_ID);
