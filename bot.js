@@ -5,9 +5,12 @@ require('dotenv').config();
 
 //Instancia a API do axios
 const axios = require('axios');
+const googleApiKey = process.env.googleAPI;
+const customSearchEngineId = process.env.customSearchEngineId;
+const Discord = require('discord.js');
 
 //Instancia a API do discord
-const { Client, GatewayIntentBits, Guild } = require('discord.js');
+const { Client, GatewayIntentBits, Guild, EmbedBuilder  } = require('discord.js');
 
 //Instancia um cliente novo para realizar login no discord
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
@@ -19,10 +22,11 @@ const cron = require('node-cron'); // Import the node-cron package
 //Para realizar a trocade roles do Fabricio
 client.on('ready', () => {
   console.log('Bot is ready');
+  client.user.setActivity('sua mae de 4', { type: 'WATCHING' });
 
   // Schedule the message to be sent at 2:00 PM every day (change the time as needed)
-  cron.schedule('34 11 * * *', () => {
-    const channel = client.channels.cache.get('1143699866883735592'); // Replace with your channel ID
+  cron.schedule('14 18 * * *', () => {
+    const channel = client.channels.cache.get(process.env.ChatBotRPG); // Replace with your channel ID
     if (channel) {
       channel.send('Iniciando troca de poderes.');
       trocaRole(channel);
@@ -32,6 +36,9 @@ client.on('ready', () => {
 
 //Event watcher de exemplo
 client.on('messageCreate', async (message) => {
+  if (message.content.toLowerCase() === '$w') {
+    getAstolfo(message);
+  }
     if (message.content === 'ping') {
         message.reply({
             content: 'pong',
@@ -45,6 +52,10 @@ client.on('messageCreate', async (message) => {
             content: quote,
         })
     }
+
+    if (message.content.toLowerCase() === '!insult') {
+      await insulto(message);
+  }
 })
 
 //Event watcher para os comandos específicos do bot
@@ -87,6 +98,50 @@ async function fetchUsernameById(channel, userId) {
     console.error(error);
     channel.send('An error occurred while fetching the user.');
   }
+}
+
+async function getAstolfo(message){
+  try {
+    const query = "Astolfo nsfw" // Extract query
+    const apiUrl = `https://www.googleapis.com/customsearch/v1?q=${query}&cx=${customSearchEngineId}&key=${googleApiKey}&searchType=image`;
+    
+    const response = await axios.get(apiUrl);
+    const items = response.data.items;
+    
+    if (items && items.length > 0) {
+      const randomIndex = Math.floor(Math.random() * items.length);
+      const imageUrl = items[randomIndex].link;
+      
+      //message.channel.send(imageUrl);
+      let exampleEmbed = new EmbedBuilder()
+      .setTitle('Astolfo Aleatório')
+      .setImage(imageUrl);
+
+      message.channel.send({ embeds: [exampleEmbed]});
+  } else {
+      message.reply('No image search results found.');
+  }
+
+  } catch (error) {
+      console.error('Error fetching random image:', error);
+      //message.reply('Oops! Something went wrong while fetching a random image.');
+  }
+}
+
+async function insulto (message){
+  try {
+    // Make a request to the Evil Insult Generator API
+    const response = await axios.get('https://evilinsult.com/generate_insult.php?lang=en&type=json');
+    
+    // Get the insult from the response data
+    const insult = response.data.insult;
+    
+    // Reply with the insult
+    message.reply(`${insult}`);
+} catch (error) {
+    console.error('Error fetching insult:', error);
+    message.reply('Oops! Something went wrong while fetching an insult.');
+}
 }
 
 function getMentionedUserRoles(message) {
@@ -157,7 +212,6 @@ async function trocaRole(channel) {
       if (role) {
         try {
           await role.edit({
-            name: roleName,
             permissions: rolePermissions.toString(),
           });
           console.log(`Role "${roleName}" updated successfully.`);
