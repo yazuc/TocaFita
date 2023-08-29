@@ -17,6 +17,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 
 //Instancia cron para realizar uma tarefa agendada
 const cron = require('node-cron'); // Import the node-cron package
+const regex = /^au{3,}/;
 
 //Método watcher, serve para mostrar que o bot está ativo, e para setar o evento marcado as 13:20
 //Para realizar a trocade roles do Fabricio
@@ -25,7 +26,7 @@ client.on('ready', () => {
   client.user.setActivity('sua mae de 4', { type: 'WATCHING' });
 
   // Schedule the message to be sent at 2:00 PM every day (change the time as needed)
-  cron.schedule('14 18 * * *', () => {
+  cron.schedule('16 21 * * *', () => {
     const channel = client.channels.cache.get(process.env.ChatBotRPG); // Replace with your channel ID
     if (channel) {
       channel.send('Iniciando troca de poderes.');
@@ -81,6 +82,15 @@ client.on('messageCreate', async (message) => {
 
   if (message.content === '!fabricio') {
     fetchUsernameById(message.channel, '248562627301736448');
+  }
+  if (message.author.id != '887743506737688606') {
+      if (regex.test(message.content)) {
+        //build wolf lyrics logic
+        message.reply("auuuuuuuuuuuu");
+        console.log("Pattern matched!");
+      } else {
+          console.log("Pattern not matched.");
+      }    
   }
 })
 
@@ -206,8 +216,9 @@ async function trocaRole(channel) {
     if (intNumber >= 1 && intNumber <= roles.length) {
       const roleName = roles[intNumber - 1];
       const rolePermissions = permissions[intNumber - 1];
+      let name = fetchUsernameById(channel, UserIDRoleChange);
 
-      await channel.send(`O poder do <@${UserIDRoleChange.toString()}> hoje é: ${roleName}`);
+      await channel.send(`O poder do ${name} hoje é: ${roleName}`);
 
       if (role) {
         try {
