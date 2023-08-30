@@ -5,6 +5,7 @@ require('dotenv').config();
 
 //Instancia a API do axios
 const axios = require('axios');
+const Fabras = require('Fabricio');
 const googleApiKey = process.env.googleAPI;
 const customSearchEngineId = process.env.customSearchEngineId;
 const Discord = require('discord.js');
@@ -30,7 +31,7 @@ client.on('ready', () => {
     const channel = client.channels.cache.get(process.env.ChatBotRPG); // Replace with your channel ID
     if (channel) {
       channel.send('Iniciando troca de poderes.');
-      trocaRole(channel);
+      Fabras.trocaRole(channel);
     }
   });
 });
@@ -77,7 +78,7 @@ client.on('messageCreate', async (message) => {
   }
 
   if (message.content === '!fabriciorole') {
-    trocaRole(message);
+    Fabras.trocaRole(message.channel);
   }
 
   if (message.content === '!fabricio') {
@@ -109,6 +110,7 @@ async function fetchUsernameById(channel, userId) {
     channel.send('An error occurred while fetching the user.');
   }
 }
+
 
 async function getAstolfo(message){
   try {
@@ -182,60 +184,9 @@ function loadCSV(){
     });
 }
 
-function gerarNumeroAleatorio() {
-  return Math.floor(Math.random() * 8) + 1;
-}
-
-let hoje = new Date().getDate();
 
 
 
-console.log(hoje + " esse é o número que hoje retorna")
 
-const roleID = process.env.roleID;
-const GuildID = process.env.GuildID;
-const UserIDRoleChange = process.env.UserIDRoleChange;
-const RoleTarget = process.env.RoleTarget;
-
-
-//melhorar complexidade e arrumar funcionalidade
-async function trocaRole(channel) {
-  const intNumber = gerarNumeroAleatorio();
-  const role = await client.guilds.cache.get(GuildID)?.roles.cache.get(roleID);
-  const hoje = new Date().getDate();
-
-  const roles = [
-    'Manage channels', 'Manage roles', 'Manage messages', 'Move members',
-    'Manage emojis', 'View audit log', 'Deafen members', 'Mute members'
-  ];
-  const permissions = [16, 268435456, 8192, 16777216, 1073741824, 128, 8388608, 4194304];
-  console.log(hoje.toString())
-  let result = loadCSV();
-  console.log(result)
-  if(hoje.toString() != result){
-    if (intNumber >= 1 && intNumber <= roles.length) {
-      const roleName = roles[intNumber - 1];
-      const rolePermissions = permissions[intNumber - 1];
-      let name = fetchUsernameById(channel, UserIDRoleChange);
-
-      await channel.send(`O poder do ${name} hoje é: ${roleName}`);
-
-      if (role) {
-        try {
-          await role.edit({
-            permissions: rolePermissions.toString(),
-          });
-          console.log(`Role "${roleName}" updated successfully.`);
-        } catch (error) {
-          console.error('Error updating role:', error);
-        }
-      } else {
-        console.log('Role not found.');
-      }
-    }
-  }else{
-    await channel.send(`O poder de <@${UserIDRoleChange.toString()}> já foi alterado hoje.`);
-  }
-}
 
 client.login(process.env.DISCORD_BOT_ID);
