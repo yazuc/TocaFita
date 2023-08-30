@@ -1,15 +1,10 @@
 #!/usr/bin/env node
-
-
 require('dotenv').config();
 
 //Instancia a API do axios
 const axios = require('axios');
 const Fabras = require('Fabricio');
 const Funcoes = require ('Funcoes');
-const googleApiKey = process.env.googleAPI;
-const customSearchEngineId = process.env.customSearchEngineId;
-const Discord = require('discord.js');
 
 //Instancia a API do discord
 const { Client, GatewayIntentBits, Guild, EmbedBuilder  } = require('discord.js');
@@ -40,7 +35,7 @@ client.on('ready', () => {
 //Event watcher de exemplo
 client.on('messageCreate', async (message) => {
   if (message.content.toLowerCase() === '$w') {
-    getAstolfo(message);
+    Funcoes.getAstolfo(message);
   }
     if (message.content === 'ping') {
         message.reply({
@@ -95,36 +90,5 @@ client.on('messageCreate', async (message) => {
       }    
   }
 })
-
-
-async function getAstolfo(message){
-  try {
-    const query = "Astolfo nsfw" // Extract query
-    const apiUrl = `https://www.googleapis.com/customsearch/v1?q=${query}&cx=${customSearchEngineId}&key=${googleApiKey}&searchType=image`;
-    
-    const response = await axios.get(apiUrl);
-    const items = response.data.items;
-    
-    if (items && items.length > 0) {
-      const randomIndex = Math.floor(Math.random() * items.length);
-      const imageUrl = items[randomIndex].link;
-      
-      //message.channel.send(imageUrl);
-      let exampleEmbed = new EmbedBuilder()
-      .setTitle('Astolfo Aleatório')
-      .setImage(imageUrl);
-
-      message.channel.send({ embeds: [exampleEmbed]});
-  } else {
-      message.reply('No image search results found.');
-  }
-
-  } catch (error) {
-      console.error('Error fetching random image:', error);
-      //message.reply('Oops! Something went wrong while fetching a random image.');
-  }
-}
-
-
 
 client.login(process.env.DISCORD_BOT_ID);
