@@ -6,6 +6,7 @@ require('dotenv').config();
 //Instancia a API do axios
 const axios = require('axios');
 const Fabras = require('Fabricio');
+const Funcoes = require ('Funcoes');
 const googleApiKey = process.env.googleAPI;
 const customSearchEngineId = process.env.customSearchEngineId;
 const Discord = require('discord.js');
@@ -56,14 +57,14 @@ client.on('messageCreate', async (message) => {
     }
 
     if (message.content.toLowerCase() === '!insult') {
-      await insulto(message);
+      await Funcoes.insulto(message);
   }
 })
 
 //Event watcher para os comandos específicos do bot
 client.on('messageCreate', async (message) => {
   if (message.content === '!getroles') {
-    const userRoles = getUserRoles(message.member);
+    const userRoles = Funcoes.getUserRoles(message.member);
 
     const response = userRoles.length > 0 ?
       `${message.author.displayName} has the following roles: ${userRoles.join(', ')}` :
@@ -73,7 +74,7 @@ client.on('messageCreate', async (message) => {
   }
 
   if (message.content.startsWith('!getUserRoles')) {
-    const rolesMessage = getMentionedUserRoles(message);
+    const rolesMessage = Funcoes.getMentionedUserRoles(message);
     message.channel.send(rolesMessage);
   }
 
@@ -82,7 +83,7 @@ client.on('messageCreate', async (message) => {
   }
 
   if (message.content === '!fabricio') {
-    fetchUsernameById(message.channel, '248562627301736448');
+    Funcoes.fetchUsernameById(message.channel, '248562627301736448');
   }
   if (message.author.id != '887743506737688606') {
       if (regex.test(message.content)) {
@@ -94,22 +95,6 @@ client.on('messageCreate', async (message) => {
       }    
   }
 })
-
-
-function getUserRoles(member) {
-  
-  return member.roles.cache.filter(role => role.name !== '@everyone').map(role => role.name);
-}
-
-async function fetchUsernameById(channel, userId) {
-  try {
-    const user = await client.users.fetch(userId);
-    channel.send(`Este é o username do fabricio: ${user.username}`);
-  } catch (error) {
-    console.error(error);
-    channel.send('An error occurred while fetching the user.');
-  }
-}
 
 
 async function getAstolfo(message){
@@ -139,53 +124,6 @@ async function getAstolfo(message){
       //message.reply('Oops! Something went wrong while fetching a random image.');
   }
 }
-
-async function insulto (message){
-  try {
-    // Make a request to the Evil Insult Generator API
-    const response = await axios.get('https://evilinsult.com/generate_insult.php?lang=en&type=json');
-    
-    // Get the insult from the response data
-    const insult = response.data.insult;
-    
-    // Reply with the insult
-    message.reply(`${insult}`);
-} catch (error) {
-    console.error('Error fetching insult:', error);
-    message.reply('Oops! Something went wrong while fetching an insult.');
-}
-}
-
-function getMentionedUserRoles(message) {
-  const mentionedUser = message.mentions.members.first();
-  
-  if (!mentionedUser) {
-    return 'No user mentioned.';
-  }
-
-  const userRoles = mentionedUser.roles.cache.filter(role => role.name !== '@everyone').map(role => role.name);
-  return `${mentionedUser.user.username} has the following roles: ${userRoles.join(', ')}`;
-}
-
-const fs = require('fs');
-const path = require('path');
-
-const csvFilePath = path.join(__dirname, 'ultimaData.csv');
-
-function loadCSV(){
-    fs.readFile(csvFilePath, 'utf8', (err, csvContent) => {
-      if (err) {
-        console.error('Error reading CSV file:', err);
-        return;
-      }
-    
-      //console.log('CSV Content:', csvContent);
-      return csvContent.toString();
-    });
-}
-
-
-
 
 
 
