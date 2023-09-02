@@ -63,62 +63,13 @@ client.on('ready', () => {
 
 //Event watcher de exemplo
 client.on('messageCreate', async (message) => {
-  if (message.content.toLowerCase() === '$w') {
-    Funcoes.getAstolfo(message);
-  }
-    if (message.content === 'ping') {
-        message.reply({
-            content: 'pong',
-        })
-    }
-    else if (message.content === 'quote') {
-        let resp = await axios.get(`https://api.quotable.io/random`);
-        const quote = resp.data.content;
-
-        message.reply({
-            content: quote,
-        })
+    if (message.content.toLowerCase() === '$w') {
+      Funcoes.getAstolfo(message);
     }
 
     if (message.content.toLowerCase() === '!insult') {
       await Funcoes.insulto(message);
-    }
-
-    if (message.content === '!join') {
-      const channel = message.guild.channels.cache.get('338849340346859540');
-      if (!channel) {
-        return message.reply('Voice channel not found.');
-      }
-  
-      const connection = joinVoiceChannel({
-        channelId: channel.id,
-        guildId: message.guild.id,
-        adapterCreator: message.guild.voiceAdapterCreator,
-      });
-
-      const audioPlayer = createAudioPlayer();
-
-      // Add error handling for the voice connection
-      connection.on('error', (error) => {
-        console.error('Voice connection error:', error);
-      });
-
-      // Create an audio resource from the audio file
-      const audioResource = createAudioResource(createReadStream(audioFile), {
-        inputType: StreamType.Arbitrary,
-      });
-
-      
-      audioPlayer.play(audioResource);
-      
-      // Listen for state changes in the audio player
-      audioPlayer.on('stateChange', (oldState, newState) => {
-        console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
-      });
-      
-      // Subscribe the audio player to the connection
-      connection.subscribe(audioPlayer);
-    }         
+    }      
 })
 
 client.on('messageCreate', async (message) => {
