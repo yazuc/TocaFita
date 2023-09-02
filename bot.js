@@ -3,18 +3,19 @@ require('dotenv').config();
 
 //Instancia a API do axios
 const axios = require('axios');
-const Fabras = require('./Fabricio');
-const Funcoes = require ('./Funcoes');
-const Animals = require('./Animals');
+const Fabras = require('./Commands/Fabricio');
+const Funcoes = require ('./Commands/Funcoes');
+const Animals = require('./Commands/Animals');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
 const { createReadStream } = require('fs');
 const { createFFmpegPlayer } = require('prism-media');
+const { Player } = require("discord-player");
 
 //Instancia a API do discord
 const { Client, GatewayIntentBits, Guild, EmbedBuilder, GUILD_VOICE_STATES  } = require('discord.js');
 
 //Instancia um cliente novo para realizar login no discord
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates] });
 
 //Instancia cron para realizar uma tarefa agendada
 const cron = require('node-cron'); // Import the node-cron package
@@ -23,10 +24,10 @@ const regex = /^au{3,}/;
 //array que mantem em memória a música carregada
 let LyricsArray = []
 let LyricsIndex = 0;
-const filePath = './Lyrics.txt';
+const filePath = './Commands/Lyrics.txt';
 console.log("joga os valores no array ")
 LyricsArray = Animals.readLyricsFromFile(filePath);
-const audioFile = 'C:\\Users\\leona\\Desktop\\discordbot\\node_modules\\animals.mp3'; // Replace with the path to your audio file
+const audioFile = './Commands/animals.mp3'; // Replace with the path to your audio file
 
 
 //Método watcher, serve para mostrar que o bot está ativo, e para setar o evento marcado as 13:20
@@ -94,16 +95,16 @@ client.on('messageCreate', async (message) => {
         inputType: StreamType.Arbitrary,
       });
 
-      // Subscribe the audio player to the connection
-      connection.subscribe(audioPlayer);
-
+      
       audioPlayer.play(audioResource);
-
+      
       // Listen for state changes in the audio player
       audioPlayer.on('stateChange', (oldState, newState) => {
         console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
       });
-
+      
+      // Subscribe the audio player to the connection
+      connection.subscribe(audioPlayer);
     }         
 })
 
