@@ -5,6 +5,7 @@ require('dotenv').config();
 const axios = require('axios');
 const Fabras = require('Fabricio');
 const Funcoes = require ('Funcoes');
+const Animals = require('Animals');
 
 //Instancia a API do discord
 const { Client, GatewayIntentBits, Guild, EmbedBuilder  } = require('discord.js');
@@ -15,6 +16,13 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 //Instancia cron para realizar uma tarefa agendada
 const cron = require('node-cron'); // Import the node-cron package
 const regex = /^au{3,}/;
+
+//array que mantem em memória a música carregada
+let LyricsArray = []
+let LyricsIndex = 0;
+const filePath = 'node_modules/Lyrics.txt';
+console.log("joga os valores no array ")
+LyricsArray = Animals.readLyricsFromFile(filePath);
 
 //Método watcher, serve para mostrar que o bot está ativo, e para setar o evento marcado as 13:20
 //Para realizar a trocade roles do Fabricio
@@ -58,36 +66,64 @@ client.on('messageCreate', async (message) => {
 
 //Event watcher para os comandos específicos do bot
 client.on('messageCreate', async (message) => {
-  if (message.content === '!getroles') {
-    const userRoles = Funcoes.getUserRoles(message.member);
+  const content = message.content;
+  const authorId = message.author.id;
 
+  const handleGetRoles = () => {
+    const userRoles = Funcoes.getUserRoles(message.member);
     const response = userRoles.length > 0 ?
       `${message.author.displayName} has the following roles: ${userRoles.join(', ')}` :
       `${message.author.displayName} doesn't have any roles.`;
-
     message.channel.send(response);
-  }
+  };
 
-  if (message.content.startsWith('!getUserRoles')) {
+  const handleGetUserRoles = () => {
     const rolesMessage = Funcoes.getMentionedUserRoles(message);
     message.channel.send(rolesMessage);
-  }
+  };
 
-  if (message.content === '!fabriciorole') {
+  const handleFabricioRole = () => {
     Fabras.trocaRole(message.channel);
-  }
+  };
 
-  if (message.content === '!fabricio') {
+  const handleFabricio = () => {
     Funcoes.fetchUsernameById(message.channel, '248562627301736448');
-  }
-  if (message.author.id != '887743506737688606') {
-      if (regex.test(message.content)) {
-        //build wolf lyrics logic
-        message.reply("auuuuuuuuuuuu");
-        console.log("Pattern matched!");
-      } else {
-          console.log("Pattern not matched.");
-      }    
+  };
+
+  switch (content) {
+    case '!getroles':
+      handleGetRoles();
+      break;
+
+    case content.startsWith('!getUserRoles'):
+      handleGetUserRoles();
+      break;
+
+    case '!fabriciorole':
+      handleFabricioRole();
+      break;
+
+    case '!fabricio':
+      handleFabricio();
+      break;
+
+    default:
+      if (authorId !== '887743506737688606' && regex.test(content)) {
+        console.log("Accepted by regex");
+        if (LyricsArray.length > LyricsIndex && LyricsArray[LyricsIndex] !== "") {
+          console.log("Sending message");
+          message.reply(LyricsArray[LyricsIndex]);
+          LyricsIndex++;
+        } else {
+          console.log("Resetting lyricsIndex");
+          LyricsIndex = 0;
+          if (LyricsArray[LyricsIndex] !== "") {
+            console.log("Sending message");
+            message.reply(LyricsArray[LyricsIndex]);
+            LyricsIndex++;
+          }
+        }
+      }
   }
 })
 
