@@ -10,7 +10,11 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } =
 const { createReadStream } = require('fs');
 const { createFFmpegPlayer } = require('prism-media');
 const { Player } = require("discord-player");
+const { exec } = require('youtube-dl-exec');
+const fs = require('fs');
+
 const ytdl = require('ytdl-core');
+const ytdlexec = require('youtube-dl-exec')
 
 //Instancia a API do discord
 const { Client, GatewayIntentBits, Guild, EmbedBuilder, GUILD_VOICE_STATES  } = require('discord.js');
@@ -127,11 +131,16 @@ client.on('messageCreate', async (message) => {
     const query = args.slice(1).join(' ');
 
     try {
+      const filePath = `./custom-name.webm`;
+
+      
       // Get the video ID or throw an error
       const videoId = Funcoes.getYouTubeVideoId(query);
 
-      // Use ytdl-core to extract the audio stream from the YouTube video
-      const stream = ytdl(videoId, { filter: 'audioonly' });
+      const videoInfo = await exec(videoId, {
+        o: 'custom-name' // Set your custom file name and extension here
+      }, { stdio: ['ignore', 'pipe', 'ignore'] }); // Get the direct audio stream URL
+      const audioStream = videoInfo.stdout;
 
       const channel = message.guild.channels.cache.get('338849340346859540');
       if (!channel) {
@@ -147,9 +156,10 @@ client.on('messageCreate', async (message) => {
       const audioPlayer = createAudioPlayer();
       audioPlayer.behaviors.maxMissedFrames = 1000000;
       
-
+      console.log("próxima ação é rodar a música")
+      console.log(filePath)
       // Create an audio resource from the audio stream
-      const audioResource = createAudioResource(stream);
+      const audioResource = createAudioResource(filePath);
 
       audioPlayer.play(audioResource);
 
@@ -179,9 +189,23 @@ client.on('messageCreate', async (message) => {
         }
       });
 
+      audioPlayer.on('idle', () => {
+        // Delete the file
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error('Error deleting file:', err);
+          } else {
+            console.log('File deleted successfully');
+          }
+        });
+      });
+
       // Subscribe the audio player to the connection
       connection.subscribe(audioPlayer);
     } catch (error) {
+       // Handle the error
+      console.error('Error:', error);
+      message.reply('An error occurred while playing the audio.');
       if (error.message === 'No video id found') {
         console.error('No video ID found in the provided URL:', query);
         message.reply('The provided URL does not contain a valid YouTube video.');
