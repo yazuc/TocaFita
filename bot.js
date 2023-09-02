@@ -6,6 +6,9 @@ const axios = require('axios');
 const Fabras = require('Fabricio');
 const Funcoes = require ('Funcoes');
 const Animals = require('Animals');
+const { getVoiceConnection } = require('@discordjs/opus');
+//const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
+
 
 //Instancia a API do discord
 const { Client, GatewayIntentBits, Guild, EmbedBuilder  } = require('discord.js');
@@ -38,6 +41,8 @@ client.on('ready', () => {
       Fabras.trocaRole(channel);
     }
   });
+
+  
 });
 
 //Event watcher de exemplo
@@ -61,7 +66,27 @@ client.on('messageCreate', async (message) => {
 
     if (message.content.toLowerCase() === '!insult') {
       await Funcoes.insulto(message);
-  }
+    }
+      if (message.content === '!join') {
+        const channel = message.guild.channels.cache.get(channelId);
+        if (!channel) {
+          return message.reply('Voice channel not found.');
+        }
+    
+        const connection = joinVoiceChannel({
+          channelId: channel.id,
+          guildId: message.guild.id,
+          adapterCreator: message.guild.voiceAdapterCreator,
+        });
+    
+        const audioPlayer = createAudioPlayer();
+        const audioResource = createAudioResource(createReadStream(audioFile), {
+          inputType: StreamType.Arbitrary,
+        });
+    
+        audioPlayer.play(audioResource);
+        connection.subscribe(audioPlayer);
+      }          
 })
 
 //Event watcher para os comandos específicos do bot
