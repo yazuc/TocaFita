@@ -3,15 +3,15 @@ require('dotenv').config();
 
 //Instancia a API do axios
 const axios = require('axios');
-const Fabras = require('Fabricio');
-const Funcoes = require ('Funcoes');
-const Animals = require('Animals');
+const Fabras = require('./Fabricio');
+const Funcoes = require ('./Funcoes');
+const Animals = require('./Animals');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
 const { createReadStream } = require('fs');
 const { createFFmpegPlayer } = require('prism-media');
 
 //Instancia a API do discord
-const { Client, GatewayIntentBits, Guild, EmbedBuilder  } = require('discord.js');
+const { Client, GatewayIntentBits, Guild, EmbedBuilder, GUILD_VOICE_STATES  } = require('discord.js');
 
 //Instancia um cliente novo para realizar login no discord
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
@@ -23,7 +23,7 @@ const regex = /^au{3,}/;
 //array que mantem em memória a música carregada
 let LyricsArray = []
 let LyricsIndex = 0;
-const filePath = 'node_modules/Lyrics.txt';
+const filePath = './Lyrics.txt';
 console.log("joga os valores no array ")
 LyricsArray = Animals.readLyricsFromFile(filePath);
 const audioFile = 'C:\\Users\\leona\\Desktop\\discordbot\\node_modules\\animals.mp3'; // Replace with the path to your audio file
@@ -81,14 +81,29 @@ client.on('messageCreate', async (message) => {
         guildId: message.guild.id,
         adapterCreator: message.guild.voiceAdapterCreator,
       });
-  
+
       const audioPlayer = createAudioPlayer();
+
+      // Add error handling for the voice connection
+      connection.on('error', (error) => {
+        console.error('Voice connection error:', error);
+      });
+
+      // Create an audio resource from the audio file
+      const audioResource = createAudioResource(createReadStream(audioFile), {
+        inputType: StreamType.Arbitrary,
+      });
+
+      // Subscribe the audio player to the connection
+      connection.subscribe(audioPlayer);
+
+      audioPlayer.play(audioResource);
+
+      // Listen for state changes in the audio player
       audioPlayer.on('stateChange', (oldState, newState) => {
         console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
       });
-      const audioResource = createAudioResource(audioFile)    
-      connection.subscribe(audioPlayer);
-      audioPlayer.play(audioResource);
+
     }         
 })
 
