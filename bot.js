@@ -10,12 +10,21 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } =
 const { createReadStream } = require('fs');
 const { createFFmpegPlayer } = require('prism-media');
 const { Player } = require("discord-player");
+const ytdl = require('ytdl-core');
 
 //Instancia a API do discord
 const { Client, GatewayIntentBits, Guild, EmbedBuilder, GUILD_VOICE_STATES  } = require('discord.js');
+const { Client: VoiceClient, GatewayIntentBits: VoiceGatewayIntentBits } = require('@discordjs/voice');
+
 
 //Instancia um cliente novo para realizar login no discord
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates] });
+const client = new Client({ intents: [
+   GatewayIntentBits.Guilds,
+   GatewayIntentBits.GuildMessages,
+   GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates,
+] });
+
 
 //Instancia cron para realizar uma tarefa agendada
 const cron = require('node-cron'); // Import the node-cron package
@@ -107,6 +116,82 @@ client.on('messageCreate', async (message) => {
       connection.subscribe(audioPlayer);
     }         
 })
+
+client.on('messageCreate', async (message) => {
+  if (message.content.startsWith('!play')) {
+    const args = message.content.split(' ');
+    if (args.length < 2) {
+      return message.reply('Please provide a YouTube video URL or search query.');
+    }
+
+    const query = args.slice(1).join(' ');
+
+    try {
+      // Get the video ID or throw an error
+      const videoId = Funcoes.getYouTubeVideoId(query);
+
+      // Use ytdl-core to extract the audio stream from the YouTube video
+      const stream = ytdl(videoId, { filter: 'audioonly' });
+
+      const channel = message.guild.channels.cache.get('338849340346859540');
+      if (!channel) {
+        return message.reply('Voice channel not found.');
+      }
+
+      const connection = joinVoiceChannel({
+        channelId: channel.id,
+        guildId: message.guild.id,
+        adapterCreator: message.guild.voiceAdapterCreator,
+      });
+
+      const audioPlayer = createAudioPlayer();
+      audioPlayer.behaviors.maxMissedFrames = 1000000;
+      
+
+      // Create an audio resource from the audio stream
+      const audioResource = createAudioResource(stream);
+
+      audioPlayer.play(audioResource);
+
+      let currentAudioResource = null;
+      let playbackPosition = 0;
+
+      audioPlayer.on('error', (error) => {      
+        console.error('AudioPlayer Error:', error.message);
+
+        // Pause playback on error.
+        audioPlayer.pause();
+      
+        // Store the current playback position.
+        if (currentAudioResource) {
+          playbackPosition = currentAudioResource.playbackDuration;
+        }
+      
+        // Implement your error handling logic here (e.g., reconnecting).
+      
+        // Retry playback from the stored position when the issue is resolved.
+        if (currentAudioResource) {
+          // Adjust the start time based on the stored playback position.
+          currentAudioResource.startTimestamp = Date.now() - playbackPosition;
+          
+          // Resume playback.
+          audioPlayer.unpause();
+        }
+      });
+
+      // Subscribe the audio player to the connection
+      connection.subscribe(audioPlayer);
+    } catch (error) {
+      if (error.message === 'No video id found') {
+        console.error('No video ID found in the provided URL:', query);
+        message.reply('The provided URL does not contain a valid YouTube video.');
+      } else {
+        console.error('Error while fetching or playing the audio:', error);
+        message.reply('An error occurred while fetching or playing the audio.');
+      }
+    }
+  }
+});
 
 //Event watcher para os comandos específicos do bot
 client.on('messageCreate', async (message) => {

@@ -97,13 +97,30 @@ async function insulto (message){
     }
   }
 
+  function getYouTubeVideoId(url) {
+    // Regular expression to match YouTube video IDs in various URL formats
+    const regEx = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu.be\/)([\w-]+)(?:&.*)?$/;
+  
+    // Use the regular expression to match the video ID
+    const match = url.match(regEx);
+  
+    if (match && match[1]) {
+      return match[1]; // Return the extracted video ID
+    } else {
+      throw new Error('Invalid YouTube URL or no video ID found.');
+    }
+  }
+
+  
+
 module.exports = {
     getUserRoles,
     getMentionedUserRoles,
     fetchUsernameById,
     loadCSV,
     insulto,    
-    getAstolfo
+    getAstolfo,
+    getYouTubeVideoId
 };
 
 client.login(process.env.DISCORD_BOT_ID);
