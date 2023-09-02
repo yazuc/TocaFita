@@ -6,9 +6,9 @@ const axios = require('axios');
 const Fabras = require('Fabricio');
 const Funcoes = require ('Funcoes');
 const Animals = require('Animals');
-const { getVoiceConnection } = require('@discordjs/opus');
-//const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
-
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
+const { createReadStream } = require('fs');
+const { createFFmpegPlayer } = require('prism-media');
 
 //Instancia a API do discord
 const { Client, GatewayIntentBits, Guild, EmbedBuilder  } = require('discord.js');
@@ -26,6 +26,8 @@ let LyricsIndex = 0;
 const filePath = 'node_modules/Lyrics.txt';
 console.log("joga os valores no array ")
 LyricsArray = Animals.readLyricsFromFile(filePath);
+const audioFile = 'C:\\Users\\leona\\Desktop\\discordbot\\node_modules\\animals.mp3'; // Replace with the path to your audio file
+
 
 //Método watcher, serve para mostrar que o bot está ativo, e para setar o evento marcado as 13:20
 //Para realizar a trocade roles do Fabricio
@@ -67,26 +69,27 @@ client.on('messageCreate', async (message) => {
     if (message.content.toLowerCase() === '!insult') {
       await Funcoes.insulto(message);
     }
-      if (message.content === '!join') {
-        const channel = message.guild.channels.cache.get(channelId);
-        if (!channel) {
-          return message.reply('Voice channel not found.');
-        }
-    
-        const connection = joinVoiceChannel({
-          channelId: channel.id,
-          guildId: message.guild.id,
-          adapterCreator: message.guild.voiceAdapterCreator,
-        });
-    
-        const audioPlayer = createAudioPlayer();
-        const audioResource = createAudioResource(createReadStream(audioFile), {
-          inputType: StreamType.Arbitrary,
-        });
-    
-        audioPlayer.play(audioResource);
-        connection.subscribe(audioPlayer);
-      }          
+
+    if (message.content === '!join') {
+      const channel = message.guild.channels.cache.get('338849340346859540');
+      if (!channel) {
+        return message.reply('Voice channel not found.');
+      }
+  
+      const connection = joinVoiceChannel({
+        channelId: channel.id,
+        guildId: message.guild.id,
+        adapterCreator: message.guild.voiceAdapterCreator,
+      });
+  
+      const audioPlayer = createAudioPlayer();
+      audioPlayer.on('stateChange', (oldState, newState) => {
+        console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
+      });
+      const audioResource = createAudioResource(audioFile)    
+      connection.subscribe(audioPlayer);
+      audioPlayer.play(audioResource);
+    }         
 })
 
 //Event watcher para os comandos específicos do bot
