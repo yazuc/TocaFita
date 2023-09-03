@@ -74,8 +74,11 @@ client.on('messageCreate', async (message) => {
 
 client.on('messageCreate', async (message) => {
   if (message.content.startsWith('!play')) {
-      Play.TocaFita(message);
+      Play.TocaFitaOnline(message);
   }
+  if (message.content.startsWith('!p')) {
+    Play.TocaFitaOnline(message);
+}
 });
 
 //Event watcher para os comandos específicos do bot

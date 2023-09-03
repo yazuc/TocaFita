@@ -69,13 +69,13 @@ function connects(message, channel, filePath){
 
       audioPlayer.on('idle', () => {
         // Delete the file
-        fs.unlink(filePath, (err) => {
-          if (err) {
-            console.error('Error deleting file:', err);
-          } else {
-            console.log('File deleted successfully');
-          }
-        });
+        // fs.unlink(filePath, (err) => {
+        //   if (err) {
+        //     console.error('Error deleting file:', err);
+        //   } else {
+        //     console.log('File deleted successfully');
+        //   }
+        // });
       });
 
       // Subscribe the audio player to the connection
@@ -135,11 +135,9 @@ async function TocaFitaOnline(message){
       
       // Get the video ID or throw an error
       const videoId = Funcoes.getYouTubeVideoId(query);
-
-      const videoInfo = await exec(videoId, {
-        o: 'custom-name' // Set your custom file name and extension here
-      }, { stdio: ['ignore', 'pipe', 'ignore'] }); // Get the direct audio stream URL
-      const audioStream = videoInfo.stdout;
+      const highWaterMarkBytes = 32 * 1024 * 1024;
+      
+      const stream = ytdl(videoId, { filter: 'audioonly', liveBuffer: 40000, highWaterMark: highWaterMarkBytes , type: 'opus' });
 
       var voiceid = message.member.voice.channelId;
 
@@ -147,7 +145,7 @@ async function TocaFitaOnline(message){
       if (!channel) {
         return message.reply('Voice channel not found.');
       }
-      connects(message, channel, filePath)    
+      connects(message, channel, stream)    
 
     } catch (error) {
        // Handle the error
@@ -163,7 +161,8 @@ async function TocaFitaOnline(message){
 
 
 module.exports = {
-    TocaFita
+    TocaFita,
+    TocaFitaOnline
 };
 
 client.login(process.env.DISCORD_BOT_ID);
