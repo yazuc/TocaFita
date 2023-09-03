@@ -145,10 +145,10 @@ async function TocaFitaOnline(message){
     
     const audioPlayer = createAudioPlayer();
     
-    audioPlayer.on('playing', () => {
-      queue.enqueue(videoUrl);
-      return message.reply('Música adicionada a fila: ' + videoUrl);
-    });
+    // audioPlayer.on('playing', () => {
+    //   queue.enqueue(videoUrl);
+    //   return message.reply('Música adicionada a fila: ' + videoUrl);
+    // });
     
     queue.enqueue(videoUrl);
     console.log(queue);
