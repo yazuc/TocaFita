@@ -53,7 +53,7 @@ async function searchVideo(query, message){
  * @param channel - canal em que o usuário está digitando, para retornar mensagens
  * @param message - objeto mensagem gerado pela api do discord quando um usuário digita algo
  * */ 
-async function streamVideo(channel, message){
+async function streamVideo(channel, message, audioPlayer){
   try {      
     // Get the video ID or throw an error
     let videoId = ""
@@ -73,7 +73,7 @@ async function streamVideo(channel, message){
     if (!channel) {
       return message.reply('Voice channel not found.');
     }
-    connects(message, channel, stream)    
+    connects(message, channel, stream, audioPlayer)    
 
   } catch (error) {
      // Handle the error
@@ -102,14 +102,13 @@ function PlayLocal(audioPlayer, streamObj){
  * @param channel - canal do discord em que o bot vai entrar
  * @param streamObj - objeto criado para realizar o streaming do video em opus
  * */ 
-function connects(message, channel, streamObj){
+function connects(message, channel, streamObj, audioPlayer){
     const connection = joinVoiceChannel({
         channelId: channel.id,
         guildId: message.guild.id,
         adapterCreator: message.guild.voiceAdapterCreator,
       });
 
-      const audioPlayer = createAudioPlayer();
       audioPlayer.behaviors.maxMissedFrames = 1000000;
       
       console.log("próxima ação é rodar a música")
@@ -121,7 +120,10 @@ function connects(message, channel, streamObj){
       });
 
       audioPlayer.on('idle', () => {
-        queue.dequeue();      
+        if(!queue.isEmpty()){
+          return streamVideo(channel, message);
+        }
+
         connection.disconnect();  
       });
 
@@ -141,13 +143,22 @@ async function TocaFitaOnline(message){
     const query = args.slice(1).join(' ');
     let videoUrl = await searchVideo(query, message);
     
+    const audioPlayer = createAudioPlayer();
+    
+    audioPlayer.on('playing', () => {
+      queue.enqueue(videoUrl);
+      return message.reply('Música adicionada a fila: ' + videoUrl);
+    });
+    
     queue.enqueue(videoUrl);
     console.log(queue);
     
     var voiceid = message.member.voice.channelId;
     const channel = message.guild.channels.cache.get(voiceid);
     
-    await streamVideo(channel, message)
+
+
+    await streamVideo(channel, message, audioPlayer)
 }
 
 
