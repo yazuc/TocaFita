@@ -2,6 +2,7 @@ require('dotenv').config();
 
 //Instancia a API do axios
 const Funcoes = require ('./Funcoes');
+const Queue = require ('./Queue');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
 const { exec } = require('youtube-dl-exec');
 const fs = require('fs');
@@ -18,6 +19,8 @@ const client = new Client({ intents: [
    GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildVoiceStates,
 ] });
+
+const queue = new Queue();
 
 function PlayLocal(audioPlayer, filePath){
     // Create an audio resource from the audio stream
@@ -37,7 +40,7 @@ function connects(message, channel, filePath){
       audioPlayer.behaviors.maxMissedFrames = 1000000;
       
       console.log("próxima ação é rodar a música")
-      console.log(filePath)
+      //console.log(filePath)
       
       PlayLocal(audioPlayer, filePath);
 
@@ -76,52 +79,18 @@ function connects(message, channel, filePath){
         //     console.log('File deleted successfully');
         //   }
         // });
+
+        queue.dequeue();        
       });
 
       // Subscribe the audio player to the connection
       connection.subscribe(audioPlayer);
 }
 
-
-async function TocaFita(message){
-    const args = message.content.split(' ');
-    if (args.length < 2) {
-      return message.reply('Please provide a YouTube video URL or search query.');
-    }
-
-    const query = args.slice(1).join(' ');
-
-    try {
-      const filePath = `./custom-name.webm`;
-      
-      // Get the video ID or throw an error
-      const videoId = Funcoes.getYouTubeVideoId(query);
-
-      const videoInfo = await exec(videoId, {
-        o: 'custom-name' // Set your custom file name and extension here
-      }, { stdio: ['ignore', 'pipe', 'ignore'] }); // Get the direct audio stream URL
-      const audioStream = videoInfo.stdout;
-
-      var voiceid = message.member.voice.channelId;
-
-      const channel = message.guild.channels.cache.get(voiceid);
-      if (!channel) {
-        return message.reply('Voice channel not found.');
-      }
-      connects(message, channel, filePath)    
-
-    } catch (error) {
-       // Handle the error
-      if (error.message === 'No video id found') {
-        console.error('No video ID found in the provided URL:', query);
-        message.reply('The provided URL does not contain a valid YouTube video.');
-      } else {
-        console.error('Error while fetching or playing the audio:', error);
-        message.reply('An error occurred while fetching or playing the audio.');
-      }
-    }
-}
-
+//implementar funcionalidade da queue de adicionar uma música na lista de espera
+//implementar pausa
+//implementar info do video
+//implementar busca por query (nome da música)
 async function TocaFitaOnline(message){
     const args = message.content.split(' ');
     if (args.length < 2) {
@@ -130,9 +99,10 @@ async function TocaFitaOnline(message){
 
     const query = args.slice(1).join(' ');
 
-    try {
-      const filePath = `./custom-name.webm`;
-      
+    queue.enqueue(query);
+    console.log(queue);
+
+    try {      
       // Get the video ID or throw an error
       const videoId = Funcoes.getYouTubeVideoId(query);
       const highWaterMarkBytes = 32 * 1024 * 1024;
