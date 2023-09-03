@@ -131,7 +131,6 @@ async function TocaFitaOnline(message){
 
 
 module.exports = {
-    TocaFita,
     TocaFitaOnline
 };
 
