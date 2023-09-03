@@ -50,14 +50,18 @@ async function searchVideo(query, message){
   }
 }
 /**     
- * @param videoUrl - url do video que vai ser tocado
  * @param channel - canal em que o usuário está digitando, para retornar mensagens
  * @param message - objeto mensagem gerado pela api do discord quando um usuário digita algo
  * */ 
-async function streamVideo(videoUrl, channel, message){
+async function streamVideo(channel, message){
   try {      
     // Get the video ID or throw an error
-    const videoId = Funcoes.getYouTubeVideoId(videoUrl);
+    let videoId = ""
+
+    if(!queue.isEmpty()){
+      videoId = Funcoes.getYouTubeVideoId(queue.peek());
+      queue.dequeue();
+    }
     
     const stream = ytdl(videoId, { 
         filter: 'audioonly',
@@ -117,7 +121,8 @@ function connects(message, channel, streamObj){
       });
 
       audioPlayer.on('idle', () => {
-        queue.dequeue();        
+        queue.dequeue();      
+        connection.disconnect();  
       });
 
       // Subscribe the audio player to the connection
@@ -142,7 +147,7 @@ async function TocaFitaOnline(message){
     var voiceid = message.member.voice.channelId;
     const channel = message.guild.channels.cache.get(voiceid);
     
-    await streamVideo(videoUrl, channel, message)
+    await streamVideo(channel, message)
 }
 
 
