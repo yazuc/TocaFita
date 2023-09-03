@@ -112,9 +112,6 @@ function connects(message, channel, streamObj){
       
       PlayLocal(audioPlayer, streamObj);
 
-      let currentAudioResource = null;
-      let playbackPosition = 0;
-
       audioPlayer.on('error', (error) => {      
         console.error('AudioPlayer Error:', error.message);
       });
