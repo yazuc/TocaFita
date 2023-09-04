@@ -8,6 +8,7 @@ const { exec } = require('youtube-dl-exec');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
 const ytSearch = require('yt-search');
+const audioPlayer = createAudioPlayer();
 
 
 //Instancia a API do discord
@@ -121,6 +122,7 @@ function connects(message, channel, streamObj, audioPlayer){
 
       audioPlayer.on('idle', () => {
         if(!queue.isEmpty()){
+          console.log('vai tentar rodar a proxima musica')
           return streamVideo(channel, message);
         }
 
@@ -143,7 +145,6 @@ async function TocaFitaOnline(message){
     const query = args.slice(1).join(' ');
     let videoUrl = await searchVideo(query, message);
     
-    const audioPlayer = createAudioPlayer();
     
     // audioPlayer.on('playing', () => {
     //   queue.enqueue(videoUrl);
@@ -156,9 +157,17 @@ async function TocaFitaOnline(message){
     var voiceid = message.member.voice.channelId;
     const channel = message.guild.channels.cache.get(voiceid);
     
+    // If nothing is currently playing, start playing the video
+    if (!audioPlayer.state.status || audioPlayer.state.status === 'idle') {
+      console.log(audioPlayer.state.status)
+      console.log('vai iniciar')    
+      await streamVideo(channel, message, audioPlayer);
+    } else {
+      console.log('vai enfileirar')    
 
-
-    await streamVideo(channel, message, audioPlayer)
+      // You can inform the user that the video has been added to the queue here.
+      message.reply('Música adicionada à fila: ' + videoUrl);
+    }
 }
 
 
