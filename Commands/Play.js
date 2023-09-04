@@ -24,7 +24,7 @@ const client = new Client({ intents: [
 
 const queue = new Queue();
 
-const highWaterMarkBytes = 32 * 1024 * 1024;
+const highWaterMarkBytes = 32 * 1024 * 1024 * 1024;
 /**     
  * @param query - parametro de busca na youtube api para retornar o url do video
  * @param message - objeto mensagem gerado pela api do discord quando um usuário digita algo
@@ -39,7 +39,7 @@ async function searchVideo(query, message){
       videoUrl = `https://www.youtube.com/watch?v=${results.videos[0].videoId}`;
 
       // Send the video URL as a response
-      message.channel.send(`Here's the video you requested: ${videoUrl}`);
+      //message.channel.send(`Here's the video you requested: ${videoUrl}`);
       return videoUrl;
       
     } else {
