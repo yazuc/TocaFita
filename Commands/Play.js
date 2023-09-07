@@ -4,8 +4,6 @@ require('dotenv').config();
 const Funcoes = require ('./Funcoes');
 const Queue = require ('./Queue');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
-const { exec } = require('youtube-dl-exec');
-const fs = require('fs');
 const ytdl = require('ytdl-core');
 const ytSearch = require('yt-search');
 const audioPlayer = createAudioPlayer();
