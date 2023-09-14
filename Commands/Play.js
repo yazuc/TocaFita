@@ -4,7 +4,8 @@ require('dotenv').config();
 const Funcoes = require ('./Funcoes');
 const Queue = require ('./Queue');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
-const ytdl = require('ytdl-core');
+const ytdl = require('ytdl-core');  
+const { exec } = require('youtube-dl-exec');
 const ytSearch = require('yt-search');
 const audioPlayer = createAudioPlayer();
 
@@ -130,6 +131,36 @@ function connects(message, channel, streamObj, audioPlayer){
       // Subscribe the audio player to the connection
       connection.subscribe(audioPlayer);
 }
+
+async function TocaFita(message){
+  const args = message.content.split(' ');
+  if (args.length < 2) {
+    return message.reply('Please provide a YouTube video URL or search query.');
+  }
+
+  const query = args.slice(1).join(' ');
+
+    const filePath = `./custom-name.webm`;
+
+    
+    // Get the video ID or throw an error
+    const videoId = Funcoes.getYouTubeVideoId(query);
+
+    const videoInfo = await exec(videoId, {
+      o: 'custom-name' // Set your custom file name and extension here
+    }, { stdio: ['ignore', 'pipe', 'ignore'] }); // Get the direct audio stream URL
+     audioStream = videoInfo.stdout;
+
+    var voiceid = message.member.voice.channelId;
+
+    const channel = message.guild.channels.cache.get(voiceid);
+    if (!channel) {
+      return message.reply('Voice channel not found.');
+    }
+
+    connects(message, channel, filePath)
+    
+  }
 
 //implementar funcionalidade da queue de adicionar uma música na lista de espera
 //implementar pausa
