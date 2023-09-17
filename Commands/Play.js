@@ -124,6 +124,7 @@ function PlayLocal(audioPlayer, streamObj){
     console.log(streamObj)
     const audioResource = createAudioResource(streamObj);
     audioPlayer.play(audioResource);
+    console.log("começou a tocar")
 }
 
 /**     
@@ -153,9 +154,10 @@ function connects(message, channel, streamObj, audioPlayer){
         if(!queue.isEmpty()){
           console.log('vai tentar rodar a proxima musica')
           return streamVideo(channel, message);
+        }else{
+          connection.disconnect();  
         }
 
-        connection.disconnect();  
       });
 
       // Subscribe the audio player to the connection

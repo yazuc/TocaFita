@@ -151,8 +151,9 @@
     "ws": "^8.13.0",
     "yallist": "^4.0.0",
     "yn": "^3.1.1",
-    "youtube-dl-exec": "^2.4.7",
+    "youtube-dl-exec": "^2.4.8",
     "youtube-search-api": "^1.2.1",
+    "yt-dlp": "^0.0.6",
     "yt-search": "^2.10.4",
     "ytdl-core": "^4.11.5"
   },
@@ -162,6 +163,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "Bot pessoal, simples, para realizar coisas idiotas com meus amigos, e também para tocar videos diretamente do youtube",
-  "devDependencies": {}
+  "description": "Bot pessoal, simples, para realizar coisas idiotas com meus amigos, e também para tocar videos diretamente do youtube"
 }
