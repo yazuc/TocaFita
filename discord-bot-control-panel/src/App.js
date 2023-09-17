@@ -1,9 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect ,useState } from 'react';
+import axios from 'axios';
 import logo from './Discord-Logo.png';
 import './App.css';
 //import '/discordbot/Commands/Play'
 
 function App() {
+  const [channels, setChannels] = useState([]);
+  const [selectedChannel, setSelectedChannel] = useState('');
+
+  useEffect(() => {
+    // Make a GET request to fetch the list of channels
+    axios.get('http://localhost:3001/channelsList')
+      .then((response) => {
+        setChannels(response.data.channels);
+        console.log(response.data.channels)
+      })
+      .catch((error) => {
+        console.error('Error fetching channels:', error);
+      });
+  }, []);
+
+
   const [inputValue, setInputValue] = useState('');
   const [queue, setQueue] = useState([]);
 
@@ -29,6 +46,10 @@ function App() {
     setQueue(updatedQueue);
   };
 
+  const handleSelectChange = (event) => {
+    setSelectedChannel(event.target.value);
+  };
+
   const handleChangeOrder = (oldIndex, newIndex) => {
     const updatedQueue = [...queue];
     const [movedItem] = updatedQueue.splice(oldIndex, 1);
@@ -42,6 +63,21 @@ function App() {
         <p>
             Controle manual de busca de música
         </p>
+        <div>
+          <h1>Channel List</h1>
+          <label htmlFor="channelSelect">Select a channel:</label>
+          <select id="channelSelect" value={selectedChannel} onChange={handleSelectChange}>
+            <option value="">Select a channel</option>
+            {channels.map((channel) => (
+              <option key={channel.id} value={channel.id}>
+                {channel.name}
+              </option>
+            ))}
+          </select>
+          {selectedChannel && (
+            <p>You selected: {channels.find((channel) => channel.id === selectedChannel)?.name}</p>
+          )}
+        </div>
         <input 
          className="cool-input"
          placeholder="buscar música"
@@ -82,7 +118,7 @@ function App() {
 
 
 async function apiCall(valor){
-  fetch('http://localhost:3001/musica?valor=' + valor)
+  fetch('http://localhost:3002/musica?valor=' + valor)
   .then((response) => {
     if (!response.ok) {
       throw new Error('Network response was not ok');

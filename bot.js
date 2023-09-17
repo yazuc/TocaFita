@@ -77,12 +77,12 @@ client.on('messageCreate', async (message) => {
 })
 
 client.on('messageCreate', async (message) => {
-  if (message.content.startsWith('!play')) {
-      Play.TocaFitaOnline(message);
+  if (message.content.match('!play')) {
+      Play.TocaFita(message);
   }
-  if (message.content.startsWith('!p')) {
-    Play.TocaFitaOnline(message);
-}
+//   if (message.content.match('!p')) {
+//     Play.TocaFitaOnline(message);
+// }
 });
 
 //Event watcher para os comandos específicos do bot
@@ -158,6 +158,13 @@ app.get('/musica', (req, res) => {
   // Send a response back to the React app
   res.json({ message: 'Response from the bot' });
 });
+
+app.get('/channelsList', (req, res) => {
+  const channels = Funcoes.listChannels(); // Replace with your channel ID
+  //console.log(channels)
+  res.json({ channels });
+});
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

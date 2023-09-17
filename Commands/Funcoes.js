@@ -111,6 +111,35 @@ async function insulto (message){
     }
   }
 
+  // Function to list channels and their IDs
+  function listChannels() {
+    const guildId = '323137904681680898'; // Replace with your guild's ID
+
+    const guild = client.guilds.cache.get(guildId);
+    //console.log(guild)
+
+    if (!guild) {
+      console.error('Guild not found.');
+      return;
+    }
+
+    const channelList = guild.channels.cache
+      .filter((channel) => channel.type === 'text' || channel.type === 'voice')
+      .map((channel) => `${channel.name}: ${channel.id}`)
+      .join('\n');
+
+      console.log(guild.channels.cache)
+      //console.log(channelList)
+      console.log(`List of channels in ${guild.name}:\n${channelList}`);
+
+      return channelList
+
+  }
+
+
+
+ 
+
   
 
 module.exports = {
@@ -120,7 +149,8 @@ module.exports = {
     loadCSV,
     insulto,    
     getAstolfo,
-    getYouTubeVideoId
+    getYouTubeVideoId,
+    listChannels
 };
 
 client.login(process.env.DISCORD_BOT_ID);
