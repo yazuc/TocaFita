@@ -265,9 +265,6 @@ async function TocaFitaOnline(message){
       await streamVideo(channel, message, audioPlayer);
     } else {
       console.log('vai enfileirar')    
-
-      // You can inform the user that the video has been added to the queue here.
-      message.reply('Música adicionada à fila: ' + videoUrl);
     }
 }
 
