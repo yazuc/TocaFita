@@ -9,7 +9,9 @@ const channel = client.channels.cache.get(process.env.ChatBotRPG); // Replace wi
 const googleApiKey = process.env.googleAPI;
 const customSearchEngineId = process.env.customSearchEngineId;
 const axios = require('axios');
+const fs = require('fs');
 
+var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
 
 
 function getUserRoles(member) {
@@ -37,7 +39,6 @@ async function fetchUsernameById(channel, userId) {
     }
 }
 
-const fs = require('fs');
 const path = require('path');
 
 const csvFilePath = path.join(__dirname, 'ultimaData.csv');
@@ -137,11 +138,6 @@ async function insulto (message){
   }
 
 
-
- 
-
-  
-
 module.exports = {
     getUserRoles,
     getMentionedUserRoles,
@@ -153,4 +149,4 @@ module.exports = {
     listChannels
 };
 
-client.login(process.env.DISCORD_BOT_ID);
+client.login(obj.DISCORD_BOT_ID);

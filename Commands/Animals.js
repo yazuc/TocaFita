@@ -11,6 +11,7 @@ const customSearchEngineId = process.env.customSearchEngineId;
 const axios = require('axios');
 
 const fs = require('fs');
+var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
 
 function readLyricsFromFile(filePath) {
   try {
@@ -37,4 +38,4 @@ module.exports = {
     readLyricsFromFile
 };
 
-client.login(process.env.DISCORD_BOT_ID);
+client.login(obj.DISCORD_BOT_ID);

@@ -1,4 +1,3 @@
-require('dotenv').config();
 
 //Instancia a API do axios
 const Funcoes = require ('./Funcoes');
@@ -10,6 +9,8 @@ const ytSearch = require('yt-search');
 const fs = require('fs');
 const audioPlayer = createAudioPlayer();
 const filePath = `./custom-name.webm`;
+
+var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
 
 
 //Instancia a API do discord
@@ -82,21 +83,25 @@ async function streamVideo(channel, message, audioPlayer){
       queue.dequeue();
     }
     
-    // const stream = ytdl(videoId, { 
-    //     filter: 'audioonly',
-    //     liveBuffer: 40000,
-    //     highWaterMark: highWaterMarkBytes ,
-    //     type: 'opus'
-    // });
+    const outputFileName = 'custom-name.webm';
 
-    const vid = exec(videoId, {
-      o: '-',
-      q: '',
-      f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
-      r: '100K',
-    }, { stdio: ['ignore', 'pipe', 'ignore'] })
+    // const vid = await exec(videoId, {
+    //   o: outputFileName, // Define o nome do arquivo de saída
+    //   q: ''
+    // });    
+    // let stream = vid.stdout;
 
-    let stream = vid.stdout;
+    const process = await exec(videoId);
+
+    const ffmpegProcess = exec('ffmpeg -i pipe:0 -f opus -b:a 128k -vn -ar 48000 -ac 2 -');
+
+      // Pipe the output of yt-dlp to FFmpeg
+      process.stdout.pipe(ffmpegProcess.stdin);
+
+      // Get the output from FFmpeg
+      const stream = ffmpegProcess.stdout;
+
+    // const stream = ytdl(videoId, { filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1 << 25 });
 
     if (!channel) {
       return message.reply('Voice channel not found.');
@@ -121,7 +126,13 @@ async function streamVideo(channel, message, audioPlayer){
  * */ 
 function PlayLocal(audioPlayer, streamObj){
     // Create an audio resource from the audio stream
-    console.log(streamObj)
+    //console.log(streamObj)
+
+    if (!streamObj) {
+      console.error("Invalid stream object provided.");
+      return;
+    }
+
     const audioResource = createAudioResource(streamObj);
     audioPlayer.play(audioResource);
     console.log("começou a tocar")
@@ -150,13 +161,13 @@ function connects(message, channel, streamObj, audioPlayer){
       audioPlayer.on('idle', () => {
 
         deleteFile(filePath);
-        
-        if(!queue.isEmpty()){
-          console.log('vai tentar rodar a proxima musica')
-          return streamVideo(channel, message);
-        }else{
-          connection.disconnect();  
-        }
+
+        // if(!queue.isEmpty()){
+        //   console.log('vai tentar rodar a proxima musica')
+        //   return streamVideo(channel, message);
+        // }else{
+        //   connection.disconnect();
+        // }
 
       });
 
@@ -187,10 +198,12 @@ async function PreparaExec(query){
   let videoUrl = await searchVideo(query);
 
   let videoId = Funcoes.getYouTubeVideoId(videoUrl);
+  const outputFileName = 'custom-name.webm';
 
-  let videoInfo = await exec(videoId, {
-    o: 'custom-name' // Set your custom file name and extension here
-  }, { stdio: ['ignore', 'pipe', 'ignore'] }); // Get the direct audio stream URL
+  const videoInfo = await exec(videoId, {
+    o: outputFileName, // Define o nome do arquivo de saída
+    q: ''             // Opcional: reduz a verbosidade do log
+  });
 }
 
 async function TocaFita(message){
@@ -203,13 +216,12 @@ async function TocaFita(message){
     let videoUrl = await searchVideo(query, message);
     
     audioPlayer.on('playing', () => {
-      queue.enqueue(videoUrl);
+      //queue.enqueue(videoUrl);
       return message.reply('Música adicionada a fila: ' + videoUrl);
     });
 
-    queue.enqueue(videoUrl);
+    //queue.enqueue(videoUrl);
     console.log(queue);
-
     deleteFile(filePath);
 
     
@@ -217,11 +229,11 @@ async function TocaFita(message){
     const videoId = Funcoes.getYouTubeVideoId(videoUrl);
 
     const videoInfo = await exec(videoId, {
-      o: 'custom-name' // Set your custom file name and extension here
-    }, { stdio: ['ignore', 'pipe', 'ignore'] }); // Get the direct audio stream URL
-     audioStream = videoInfo.stdout;
+      o: 'custom-name'
+    });
+    //console.log(videoInfo)
 
-     
+    audioStream = videoInfo.stdout;
 
     var voiceid = message.member.voice.channelId;
 
@@ -274,4 +286,4 @@ module.exports = {
     TocaFita
 };
 
-client.login(process.env.DISCORD_BOT_ID);
+client.login(obj.DISCORD_BOT_ID);

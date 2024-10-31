@@ -6,6 +6,8 @@ const RoleTarget = process.env.RoleTarget;
 const { Client, GatewayIntentBits, Guild, EmbedBuilder  } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 const channel = client.channels.cache.get(process.env.ChatBotRPG); // Replace with your channel ID
+var fs = require('fs');
+var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
 
 function gerarNumeroAleatorio() {
   return Math.floor(Math.random() * 8) + 1;
@@ -55,7 +57,7 @@ async function trocaRole(channel) {
     }
   }
 
-    client.login(process.env.DISCORD_BOT_ID);
+    client.login(obj.DISCORD_BOT_ID);
 
   module.exports = {
     trocaRole

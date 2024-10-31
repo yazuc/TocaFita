@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-require('dotenv').config();
+
+var fs = require('fs');
+var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
 
 //Instancia a API do axios
-const axios = require('axios');
-const express = require('express');
 const Fabras = require('./Commands/Fabricio');
 const Funcoes = require ('./Commands/Funcoes');
 const Animals = require('./Commands/Animals');
@@ -13,14 +13,11 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } =
 const { createReadStream } = require('fs');
 const { createFFmpegPlayer } = require('prism-media');
 const { Player } = require("discord-player");
-const { exec } = require('youtube-dl-exec');
-const fs = require('fs');
+//const { exec } = require('youtube-dl-exec');
 
 const ytdl = require('ytdl-core');
 const ytdlexec = require('youtube-dl-exec')
 
-const app = express();
-const port = 3001;
 
 //Instancia a API do discord
 const { Client, GatewayIntentBits, Guild, EmbedBuilder, GUILD_VOICE_STATES  } = require('discord.js');
@@ -78,11 +75,11 @@ client.on('messageCreate', async (message) => {
 
 client.on('messageCreate', async (message) => {
   if (message.content.match('!play')) {
-      Play.TocaFita(message);
+     Play.TocaFita(message);
   }
-//   if (message.content.match('!p')) {
-//     Play.TocaFitaOnline(message);
-// }
+  // if (message.content.match('!p')) {
+  //    Play.TocaFitaOnline(message);
+  // }
 });
 
 //Event watcher para os comandos específicos do bot
@@ -148,24 +145,6 @@ client.on('messageCreate', async (message) => {
   }
 })
 
-client.login(process.env.DISCORD_BOT_ID);
-
-app.get('/musica', (req, res) => {
-  const valor = req.query.valor;
-  const channel = client.channels.cache.get('1143699866883735592'); // Replace with your channel ID
-  channel.send('!p ' + valor);
-  // Call the specific bot functionality here
-  // Send a response back to the React app
-  res.json({ message: 'Response from the bot' });
-});
-
-app.get('/channelsList', (req, res) => {
-  const channels = Funcoes.listChannels(); // Replace with your channel ID
-  //console.log(channels)
-  res.json({ channels });
-});
+client.login(obj.DISCORD_BOT_ID);
 
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
