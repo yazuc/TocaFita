@@ -69,6 +69,13 @@ async function searchVideo(query){
     }   
 }
 
+function stop(){
+  audioPlayer.pause();
+}
+
+function continuar(){
+  audioPlayer.unpause();
+}
 /**     
  * @param channel - canal em que o usuário está digitando, para retornar mensagens
  * @param message - objeto mensagem gerado pela api do discord quando um usuário digita algo
@@ -161,14 +168,7 @@ function connects(message, channel, streamObj, audioPlayer){
       audioPlayer.on('idle', () => {
 
         deleteFile(filePath);
-
-        // if(!queue.isEmpty()){
-        //   console.log('vai tentar rodar a proxima musica')
-        //   return streamVideo(channel, message);
-        // }else{
-        //   connection.disconnect();
-        // }
-
+        connection.disconnect();
       });
 
       // Subscribe the audio player to the connection
@@ -213,12 +213,8 @@ async function TocaFita(message){
     }
 
     const query = args.slice(1).join(' ');
-    let videoUrl = await searchVideo(query, message);
-    
-    audioPlayer.on('playing', () => {
-      //queue.enqueue(videoUrl);
-      return message.reply('Música adicionada a fila: ' + videoUrl);
-    });
+    let videoUrl = await searchVideo(query, message);        
+    message.reply('Música encontrada: ' + videoUrl);    
 
     //queue.enqueue(videoUrl);
     console.log(queue);
@@ -283,7 +279,9 @@ async function TocaFitaOnline(message){
 
 module.exports = {
     TocaFitaOnline,
-    TocaFita
+    TocaFita,
+    stop,
+    continuar
 };
 
 client.login(obj.DISCORD_BOT_ID);
