@@ -15,7 +15,7 @@ var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
 
 //Instancia a API do discord
 const { Client, GatewayIntentBits, Guild, EmbedBuilder, GUILD_VOICE_STATES  } = require('discord.js');
-const { stream } = require('npmlog');
+const { stream, pause } = require('npmlog');
 const { AudioPlayerStatus } = require('@discordjs/voice');
 
 //Instancia um cliente novo para realizar login no discord
@@ -231,8 +231,8 @@ async function TocaFita(message){
     //queue.enqueue(videoUrl);   
 
     if(audioPlayer.state.status === AudioPlayerStatus.Playing){
+      pause();
       console.log("musica está tocando, adicionando na queue");
-      return false;
     }
     
     deleteFile(filePath);
