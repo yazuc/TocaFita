@@ -21,7 +21,15 @@ class Queue {
           return null;
         }
         return this.items[0];
+    }
+
+    poll() {
+      if (this.isEmpty()) {
+          return null;
       }
+      return this.items.shift(); // removes and returns the first element
+    }
+  
   
     isEmpty() {
       return this.items.length === 0;

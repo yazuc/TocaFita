@@ -16,6 +16,7 @@ var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
 //Instancia a API do discord
 const { Client, GatewayIntentBits, Guild, EmbedBuilder, GUILD_VOICE_STATES  } = require('discord.js');
 const { stream } = require('npmlog');
+const { AudioPlayerStatus } = require('@discordjs/voice');
 
 //Instancia um cliente novo para realizar login no discord
 const client = new Client({ intents: [
@@ -69,6 +70,31 @@ async function searchVideo(query){
     }   
 }
 
+function isPlaying(){
+    return audioPlayer.state.status === AudioPlayerStatus.Playing;  
+}
+
+function enqueue(message){
+  queue.enqueue(message)
+  return queue;
+}
+
+async function onIdle(){
+  console.log("aplicou on idle")
+  audioPlayer.on('idle', () => {
+    console.log("está idle")
+      tocaProxima()
+  });
+}
+
+async  function tocaProxima(){
+  if(queue.size() > 0){
+    console.log(queue);
+    deleteFile(filePath);
+    TocaFita(queue.poll());
+ }    
+}
+
 function stop(){
   audioPlayer.pause();
 }
@@ -91,12 +117,6 @@ async function streamVideo(channel, message, audioPlayer){
     }
     
     const outputFileName = 'custom-name.webm';
-
-    // const vid = await exec(videoId, {
-    //   o: outputFileName, // Define o nome do arquivo de saída
-    //   q: ''
-    // });    
-    // let stream = vid.stdout;
 
     const process = await exec(videoId);
 
@@ -133,16 +153,16 @@ async function streamVideo(channel, message, audioPlayer){
  * */ 
 function PlayLocal(audioPlayer, streamObj){
     // Create an audio resource from the audio stream
-    //console.log(streamObj)
-
     if (!streamObj) {
       console.error("Invalid stream object provided.");
       return;
-    }
-
+    }    
     const audioResource = createAudioResource(streamObj);
     audioPlayer.play(audioResource);
     console.log("começou a tocar")
+    console.log(audioPlayer.state.status)
+    //onIdle();
+    //console.log(audioPlayer)
 }
 
 /**     
@@ -165,25 +185,17 @@ function connects(message, channel, streamObj, audioPlayer){
         console.error('AudioPlayer Error:', error.message);
       });
 
-      audioPlayer.on('idle', () => {
-
-        deleteFile(filePath);
-        connection.disconnect();
-      });
-
       // Subscribe the audio player to the connection
       connection.subscribe(audioPlayer);
 }
 
 function deleteFile(filePath) {
-  // Check if the file exists before attempting to delete it
   fs.access(filePath, fs.constants.F_OK, (err) => {
     if (err) {
       console.error(`The file ${filePath} does not exist.`);
       return;
     }
 
-    // Delete the file
     fs.unlink(filePath, (unlinkErr) => {
       if (unlinkErr) {
         console.error(`Error deleting the file: ${unlinkErr}`);
@@ -216,8 +228,13 @@ async function TocaFita(message){
     let videoUrl = await searchVideo(query, message);        
     message.reply('Música encontrada: ' + videoUrl);    
 
-    //queue.enqueue(videoUrl);
-    console.log(queue);
+    //queue.enqueue(videoUrl);   
+
+    if(audioPlayer.state.status === AudioPlayerStatus.Playing){
+      console.log("musica está tocando, adicionando na queue");
+      return false;
+    }
+    
     deleteFile(filePath);
 
     
@@ -281,7 +298,11 @@ module.exports = {
     TocaFitaOnline,
     TocaFita,
     stop,
-    continuar
+    continuar,
+    isPlaying,
+    enqueue,
+    onIdle,
+    tocaProxima
 };
 
 client.login(obj.DISCORD_BOT_ID);

@@ -8,15 +8,8 @@ const Fabras = require('./Commands/Fabricio');
 const Funcoes = require ('./Commands/Funcoes');
 const Animals = require('./Commands/Animals');
 const Play = require('./Commands/Play');
+const Queue = require ('./Commands/Queue');
 
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
-const { createReadStream } = require('fs');
-const { createFFmpegPlayer } = require('prism-media');
-const { Player } = require("discord-player");
-//const { exec } = require('youtube-dl-exec');
-
-const ytdl = require('ytdl-core');
-const ytdlexec = require('youtube-dl-exec')
 
 
 //Instancia a API do discord
@@ -34,6 +27,7 @@ const client = new Client({ intents: [
 //Instancia cron para realizar uma tarefa agendada
 const cron = require('node-cron'); // Import the node-cron package
 const regex = /^au{3,}/;
+const queue = new Queue();
 
 //array que mantem em memória a música carregada
 let LyricsArray = []
@@ -46,7 +40,7 @@ const audioFile = './Commands/animals.mp3'; // Replace with the path to your aud
 
 //Método watcher, serve para mostrar que o bot está ativo, e para setar o evento marcado as 13:20
 //Para realizar a trocade roles do Fabricio
-client.on('ready', () => {
+client.on('ready', async () => {
   console.log('Bot is ready');
   client.user.setActivity('sua mae de 4', { type: 'WATCHING' });
 
@@ -58,8 +52,7 @@ client.on('ready', () => {
       Fabras.trocaRole(channel);
     }
   });
-
-  
+  await Play.onIdle();  
 });
 
 //Event watcher de exemplo
@@ -75,13 +68,20 @@ client.on('messageCreate', async (message) => {
 
 client.on('messageCreate', async (message) => {
   if (message.content.match('!play')) {
-    Play.TocaFita(message);
+    if(Play.isPlaying()){      
+      console.log(Play.enqueue(message))
+    }else{
+      Play.TocaFita(message);
+    }
   }
   if(message.content.match("!stop")){
     Play.stop();
   }
   if(message.content.match("!continue")){
     Play.continuar();
+  }
+  if(message.content.match("!next")){
+    Play.tocaProxima();
   }
 });
 
