@@ -228,8 +228,6 @@ async function TocaFita(message){
     let videoUrl = await searchVideo(query, message);        
     message.reply('Música encontrada: ' + videoUrl);    
 
-    //queue.enqueue(videoUrl);   
-
     if(audioPlayer.state.status === AudioPlayerStatus.Playing){
       pause();
       console.log("musica está tocando, adicionando na queue");
