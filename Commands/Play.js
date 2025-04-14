@@ -95,6 +95,14 @@ async  function tocaProxima(){
  }    
 }
 
+//message.content
+function listQueue(){
+  var string = ''
+  for(i = 0; i < q.size(); i++){    
+    string += i + " " + q.items[i].content
+  } 
+}
+
 function stop(){
   audioPlayer.pause();
 }
