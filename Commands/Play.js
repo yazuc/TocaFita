@@ -97,10 +97,14 @@ async  function tocaProxima(){
 
 //message.content
 function listQueue(){
+
+  if(q.size() == 0) return false;
+
   var string = ''
   for(i = 0; i < q.size(); i++){    
     string += i + " " + q.items[i].content
-  } 
+  }
+
 }
 
 function stop(){
@@ -308,6 +312,7 @@ module.exports = {
     isPlaying,
     enqueue,
     onIdle,
+    listQueue,
     tocaProxima
 };
 
