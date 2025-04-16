@@ -95,17 +95,27 @@ async  function tocaProxima(){
  }    
 }
 
-//message.content
-function listQueue(){
+function listQueue(message) {
+  console.log(message);
 
-  if(q.size() == 0) return false;
-
-  var string = ''
-  for(i = 0; i < q.size(); i++){    
-    string += i + " " + q.items[i].content
+  if (queue.size() === 0) {
+    message.reply("Não tem nada na fila.");
+    return false;
   }
 
+  let resposta = "**Fila de músicas:**\n";
+  for (let i = 0; i < queue.size(); i++) {
+    let conteudo = queue.items[i].content;
+
+    // Pega tudo depois de "!play " (com ou sem espaços extras)
+    let musica = conteudo.split(/!play\s+/i)[1] || "[desconhecido]";
+
+    resposta += `${i + 1}. ${musica}\n`;
+  }
+
+  message.reply(resposta);
 }
+
 
 function stop(){
   audioPlayer.pause();

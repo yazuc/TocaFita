@@ -83,6 +83,10 @@ client.on('messageCreate', async (message) => {
   if(message.content.match("!next")){
     Play.tocaProxima();
   }
+  if(message.content.match("!list")){
+    console.log(message);
+    Play.listQueue(message);
+  }
 });
 
 //Event watcher para os comandos específicos do bot
