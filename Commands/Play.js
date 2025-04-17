@@ -1,6 +1,7 @@
 
 //Instancia a API do axios
 const Funcoes = require ('./Funcoes');
+const Play = require ('./Play');
 const Queue = require ('./Queue');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');  
@@ -9,6 +10,7 @@ const ytSearch = require('yt-search');
 const fs = require('fs');
 const audioPlayer = createAudioPlayer();
 const filePath = `./custom-name.webm`;
+const path = require('path');
 
 var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
 
@@ -74,25 +76,68 @@ function isPlaying(){
     return audioPlayer.state.status === AudioPlayerStatus.Playing;  
 }
 
-function enqueue(message){
-  queue.enqueue(message)
+function enqueue(message) {
+  queue.enqueue(message);
+  
+  // Only download "next" if it's the only thing in queue after current song
+  if (queue.size() === 1 && audioPlayer.state.status === AudioPlayerStatus.Playing) {
+    //downloadNext(); // pre-download
+  }
+
   return queue;
 }
+
+
+async function downloadNext() {
+  if (queue.size() >= 1) {
+    const nextQuery = queue.peek().content.split(/!play\s+/i)[1];
+    const videoUrl = await searchVideo(nextQuery);
+
+    const videoId = Funcoes.getYouTubeVideoId(videoUrl);
+    const outputFileName = './next.webm';
+
+    // Clean up old 'next' file if it exists
+    deleteFile(outputFileName);
+
+    await exec(videoId, {
+      o: 'next'
+    });
+
+    console.log(`Next video downloaded: ${outputFileName}`);
+  }
+}
+
 
 async function onIdle(){
   console.log("aplicou on idle")
   audioPlayer.on('idle', () => {
     console.log("está idle")
-      tocaProxima()
+      if(queue.isEmpty()){
+        //audioPlayer.destroy();
+      }else{
+        tocaProxima()
+      }
   });
 }
 
-async  function tocaProxima(){
-  if(queue.size() > 0){
+async function tocaProxima(message) {
+  if (queue.size() > 0) {
     console.log(queue);
-    deleteFile(filePath);
+
+    // Move next.webm to custom-name.webm
+    stop();
+    // try {
+    //   await fs.rename('./discordbot/next.webm', './discordbot/custom-name.webm');
+    // } catch (e) {
+    //   console.warn('next.webm not found. Will download normally.');
+    // }
+
+    if (message != undefined)
+      message.reply("Tocando próxima na lista: " + queue.peek().content.split(/!play\s+/i)[1]);
+
     TocaFita(queue.poll());
- }    
+    //downloadNext(); // Prepares the following track
+  }
 }
 
 function listQueue(message) {
@@ -228,17 +273,24 @@ function deleteFile(filePath) {
   });
 }
 
-async function PreparaExec(query){
-  let videoUrl = await searchVideo(query);
+async function stopPlayback() {
+  if (audioPlayer) {
+    audioPlayer.stop();
 
-  let videoId = Funcoes.getYouTubeVideoId(videoUrl);
-  const outputFileName = 'custom-name.webm';
+    // Wait for the audioPlayer to enter IDLE state
+    await new Promise(resolve => {
+      const check = setInterval(() => {
+        if (audioPlayer.state.status === AudioPlayerStatus.Idle) {
+          clearInterval(check);
+          resolve();
+        }
+      }, 100);
+    });
 
-  const videoInfo = await exec(videoId, {
-    o: outputFileName, // Define o nome do arquivo de saída
-    q: ''             // Opcional: reduz a verbosidade do log
-  });
+    console.log("Playback stopped, safe to rewrite file.");
+  }
 }
+
 
 async function TocaFita(message){
     const args = message.content.split(' ');
@@ -251,10 +303,10 @@ async function TocaFita(message){
     message.reply('Música encontrada: ' + videoUrl);    
 
     if(audioPlayer.state.status === AudioPlayerStatus.Playing){
-      pause();
+      stop();
       console.log("musica está tocando, adicionando na queue");
     }
-    
+    //await stopPlayback()
     deleteFile(filePath);
 
     

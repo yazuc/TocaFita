@@ -81,11 +81,16 @@ client.on('messageCreate', async (message) => {
     Play.continuar();
   }
   if(message.content.match("!next")){
-    Play.tocaProxima();
+    Funcoes.debug("objMessage", message.toString())
+    Play.tocaProxima(message);
   }
   if(message.content.match("!list")){
     console.log(message);
     Play.listQueue(message);
+  }
+  if(message.content.match("!restart")){
+    Funcoes.debug("objMessage", message.toString())
+    Funcoes.Shutdown(message)
   }
 });
 

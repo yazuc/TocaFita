@@ -112,6 +112,24 @@ async function insulto (message){
     }
   }
 
+  /**
+   * Writes content into a file. If the file exists, appends to it.
+   * 
+   * @param {string} fileName - Name of the file (can include relative or full path)
+   * @param {string} content - Text to write/append into the file
+   */
+  function debug(fileName, content) {
+    const fullPath = path.resolve(fileName);
+
+    fs.appendFile(fullPath, content + '\n', 'utf8', (err) => {
+        if (err) {
+            console.error(`Error writing to file "${fileName}":`, err);
+        } else {
+            console.log(`Content written to "${fileName}"`);
+        }
+    });
+  }
+
   // Function to list channels and their IDs
   function listChannels() {
     const guildId = '323137904681680898'; // Replace with your guild's ID
@@ -137,6 +155,16 @@ async function insulto (message){
 
   }
 
+  function Shutdown(message) {
+    console.log("Cleaning up before shutdown...");
+    message.reply("Desligando bot, voltará online em 1 min.")
+    // Example: close DB, clear timers, etc.
+    setTimeout(() => {
+        console.log("Done cleaning. Exiting now.");
+        process.exit(0);
+    }, 1000);
+}
+
 
 module.exports = {
     getUserRoles,
@@ -146,7 +174,9 @@ module.exports = {
     insulto,    
     getAstolfo,
     getYouTubeVideoId,
-    listChannels
+    listChannels,
+    debug,
+    Shutdown
 };
 
 client.login(obj.DISCORD_BOT_ID);
