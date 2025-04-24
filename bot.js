@@ -8,6 +8,7 @@ const Fabras = require('./Commands/Fabricio');
 const Funcoes = require ('./Commands/Funcoes');
 const Animals = require('./Commands/Animals');
 const Play = require('./Commands/Play');
+const PlayOnline = require('./Commands/Play_online');
 const Queue = require ('./Commands/Queue');
 
 
@@ -72,6 +73,13 @@ client.on('messageCreate', async (message) => {
       console.log(Play.enqueue(message))
     }else{
       Play.TocaFita(message);
+    }
+  }
+  if (message.content.match('!op')) {
+    if(Play.isPlaying()){      
+      console.log(Play.enqueue(message))
+    }else{
+      PlayOnline.TocaFitaOnline(message);
     }
   }
   if(message.content.match("!stop")){
