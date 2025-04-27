@@ -38,13 +38,21 @@ console.log("joga os valores no array ")
 LyricsArray = Animals.readLyricsFromFile(filePath);
 const audioFile = './Commands/animals.mp3'; // Replace with the path to your audio file
 
+// client.registry.registerGroups([
+//   ['music', 'music bot commands']
+// ]).registerDefaults();
 
 //Método watcher, serve para mostrar que o bot está ativo, e para setar o evento marcado as 13:20
 //Para realizar a trocade roles do Fabricio
 client.on('ready', async () => {
   console.log('Bot is ready');
   client.user.setActivity('sua mae de 4', { type: 'WATCHING' });
-
+   const channel = client.channels.cache.get(obj.CHANNEL_ID);
+	if (channel) {
+	  channel.send('ESTOU VIVO!!!!')
+	    .then(() => console.log('Message sent!'))
+     .catch(err => console.error('Error sending message:', err));
+  } 
   // Schedule the message to be sent at 2:00 PM every day (change the time as needed)
   cron.schedule('16 21 * * *', () => {
     const channel = client.channels.cache.get(process.env.ChatBotRPG); // Replace with your channel ID
@@ -69,10 +77,14 @@ client.on('messageCreate', async (message) => {
 
 client.on('messageCreate', async (message) => {
   if (message.content.match('!play')) {
-    if(Play.isPlaying()){      
+    if(Play.isPlaying()){  
+      message.reply("Entrou para a fila, para ver a fila digite: !list");    
       console.log(Play.enqueue(message))
     }else{
+      console.time("Tempo para TocaFita")
+      message.reply("Recebi a música e já retorno ela seu ansioso.")
       Play.TocaFita(message);
+      console.timeEnd("Tempo para TocaFita")
     }
   }
   if (message.content.match('!op')) {

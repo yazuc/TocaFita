@@ -6,10 +6,12 @@ const Queue = require ('./Queue');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');  
 const { exec } = require('youtube-dl-exec');
+const YTDlpWrap = require('yt-dlp-wrap').default;
+const ytDlpWrap = new YTDlpWrap('./yt-dlp');
 const ytSearch = require('yt-search');
 const fs = require('fs');
 const audioPlayer = createAudioPlayer();
-const filePath = `./custom-name.webm`;
+const filePath = `./custom-name.mp4`;
 const path = require('path');
 
 var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
@@ -313,16 +315,32 @@ async function TocaFita(message){
     // Get the video ID or throw an error
     const videoId = Funcoes.getYouTubeVideoId(videoUrl);
 
-    const videoInfo = await exec(videoId, {
-      o: 'custom-name'
-    });
-    //console.log(videoInfo)
+    // const videoInfo = await exec(videoId, {
+    //   o: 'custom-name'
+    // });
 
-    audioStream = videoInfo.stdout;
+    console.time('DownloadTime');
+    let stdout = await ytDlpWrap.execPromise([
+      videoUrl,
+      '-f', 'worstaudio', 
+      '--limit-rate', '2M',  // Limit the rate to 1MB/s (adjust as needed)
+      '--concurrent-fragments', '16',  // Number of concurrent fragments to download
+      '--no-warnings',  // Disable warnings to prevent unnecessary output
+      '--quiet',         // Suppress most output
+      '--no-mtime',
+      '--no-post-overwrites',  // Skip unnecessary post-processing
+      '--no-embed-subs',  // Skip embedding subtitles
+      '-o', 'custom-name.mp4'
+    ]);
+    console.timeEnd('DownloadTime');
+
+    //console.log(videoInfo)
 
     var voiceid = message.member.voice.channelId;
 
     const channel = message.guild.channels.cache.get(voiceid);
+    console.log(voiceid)
+    console.log(channel)
     if (!channel) {
       return message.reply('Voice channel not found.');
     }

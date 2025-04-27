@@ -1,141 +1,86 @@
-// Play_Online.js
 const Funcoes = require('./Funcoes');
-const Queue = require('./Queue');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
-const ytSearch = require('yt-search');
-const { exec } = require('youtube-dl-exec');
+const { Readable } = require('stream');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
+const YTDlpWrap = require('yt-dlp-wrap').default;
+const ytDlpWrap = new YTDlpWrap('./yt-dlp.exe');
 const fs = require('fs');
-const path = require('path');
-const { raw: ytdlp } = require('yt-dlp-exec');
-const prism = require('prism-media');
+const ffmpeg = require('fluent-ffmpeg');
 
+const StreamOptions ={
+  seek: 0,
+  volume: 1
+}
+
+const queue = new Map(); // Se quiser manter controle extra, mas Player já tem fila interna
 const audioPlayer = createAudioPlayer();
-const queue = new Queue();
 
 /**
- * Search for a video on YouTube and return the first result's URL.
+ * Toca uma música ou adiciona na fila.
  */
-async function searchVideo(query) {
-  const results = await ytSearch(query);
-  if (results && results.videos && results.videos.length > 0) {
-    return `https://www.youtube.com/watch?v=${results.videos[0].videoId}`;
+async function TocaFitaOnline(message) {
+  const args = message.content.split(' ').slice(1);
+  if (!args.length) return message.reply('Digite o nome ou link da música.');
+
+  const channel = message.member.voice.channel;
+  if (!channel) return message.reply('Você precisa estar em um canal de voz!');
+
+  const query = args.join(' ');
+
+  try {
+    console.log(`Procurando pela música: ${query}`);
+
+    
+    // Ensure the stream is passed to the Discord player
+    connects(message, channel, query);
+  } catch (error) {
+    console.error('Erro ao baixar o vídeo:', error);
+    message.reply('Ocorreu um erro ao tentar obter o áudio do YouTube.');
   }
-  return null;
 }
 
-function isPlaying() {
-  return audioPlayer.state.status === AudioPlayerStatus.Playing;
-}
+function connects(message, channel, query) {
 
-function stop() {
-  audioPlayer.pause();
-}
+  // Execute yt-dlp to get the audio stream
+  let readableStream = ytDlpWrap.execStream([
+    query,
+    '-f', 'bestaudio',  // Get the best audio quality
+    '--extract-audio',    // Extract audio only (avoid video)
+    '--audio-format', 'opus', // Prefer the efficient opus format
+  ]);
 
-function continuar() {
-  audioPlayer.unpause();
-}
+  let readableStreamYT = new Readable({
+    read() {
+      readableStream.on('data', (chunk) => {
+        this.push(chunk);  // Push each chunk into the readable stream
+      });
+    }
+  });  
 
-function listQueue(message) {
-  if (queue.size() === 0) {
-    message.reply("Não tem nada na fila.");
-    return;
-  }
-  let resposta = "**Fila de músicas:**\n";
-  queue.items.forEach((item, index) => {
-    let musica = item.split(/!play\s+/i)[1] || "[desconhecido]";
-    resposta += `${index + 1}. ${musica}\n`;
-  });
-  message.reply(resposta);
-}
-
-function connects(message, channel, streamObj) {
+  // Create a new audio player for each song
   const connection = joinVoiceChannel({
     channelId: channel.id,
     guildId: message.guild.id,
     adapterCreator: message.guild.voiceAdapterCreator,
   });
 
-  const audioResource = createAudioResource(streamObj);
-  audioPlayer.play(audioResource);
-  connection.subscribe(audioPlayer);
+  console.log("Próxima ação é rodar a música");
 
-  audioPlayer.on('error', error => {
+  // Create an audio resource from the stream
+  
+  const resource = createAudioResource(readableStreamYT);
+  // Play the audio resource
+  audioPlayer.play(resource);
+
+  // Error handling for the audio player
+  audioPlayer.on('error', (error) => {
     console.error('AudioPlayer Error:', error.message);
+    message.reply('Ocorreu um erro ao tentar tocar a música.');
   });
+
+  // Subscribe the audio player to the connection
+  connection.subscribe(audioPlayer);
 }
-
-async function streamVideo(channel, message, videoUrl) {
-  try {
-    const videoId = Funcoes.getYouTubeVideoId(videoUrl);
-    const output = await exec(videoId, { output: '-' });
-
-    if (!channel) return message.reply('Voice channel not found.');
-    connects(message, channel, output.stdout);
-  } catch (error) {
-    console.error('Error while fetching or playing the audio:', error);
-    message.reply('An error occurred while trying to play the audio.');
-  }
-}
-
-async function TocaFitaOnline(voiceChannel, video) {
-    try {
-      const connection = joinVoiceChannel({
-        channelId: voiceChannel.id,
-        guildId: voiceChannel.guild.id,
-        adapterCreator: voiceChannel.guild.voiceAdapterCreator
-      });
-  
-      const ytdlpProcess = ytdlp(video.url, {
-        output: '-',
-        format: 'bestaudio[ext=webm]',
-        quiet: true,
-        limitRate: '100K',
-        verbose: false,
-        dumpSingleJson: false,
-        referer: video.url,
-        stdout: 'pipe'
-      });
-  
-      const ffmpeg = new prism.FFmpeg({
-        args: [
-          '-analyzeduration', '0',
-          '-loglevel', '0',
-          '-i', 'pipe:0',
-          '-f', 'opus',
-          '-ar', '48000',
-          '-ac', '2',
-          'pipe:1'
-        ]
-      });
-  
-      ytdlpProcess.stdout.pipe(ffmpeg);
-  
-      const stream = ffmpeg;
-  
-      const resource = createAudioResource(stream, {
-        inputType: StreamType.Opus
-      });
-  
-      const player = createAudioPlayer();
-      player.play(resource);
-  
-      connection.subscribe(player);
-  
-      player.on(AudioPlayerStatus.Idle, () => {
-        connection.destroy();
-      });
-  
-      return { connection, player };
-    } catch (error) {
-      console.error('Error while fetching or playing the audio:', error);
-      throw error;
-    }
-  }
 
 module.exports = {
-  TocaFitaOnline,
-  stop,
-  continuar,
-  isPlaying,
-  listQueue
+  TocaFitaOnline
 };
