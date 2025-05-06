@@ -2,9 +2,8 @@ const Funcoes = require('./Funcoes');
 const { Readable } = require('stream');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
 const YTDlpWrap = require('yt-dlp-wrap').default;
-const ytDlpWrap = new YTDlpWrap('./yt-dlp.exe');
+const ytDlpWrap = new YTDlpWrap('./yt-dlp');
 const fs = require('fs');
-const ffmpeg = require('fluent-ffmpeg');
 
 const StreamOptions ={
   seek: 0,
@@ -38,36 +37,44 @@ async function TocaFitaOnline(message) {
   }
 }
 
-function connects(message, channel, query) {
-
+async function connects(message, channel, query) {
   // Execute yt-dlp to get the audio stream
   let readableStream = ytDlpWrap.execStream([
     query,
     '-f', 'bestaudio',  // Get the best audio quality
-    '--extract-audio',    // Extract audio only (avoid video)
-    '--audio-format', 'opus', // Prefer the efficient opus format
+    '--extract-audio',   // Extract audio only (avoid video)
+    '--audio-format', 'opus', // Use opus format for efficient streaming
   ]);
 
+  // Wrap yt-dlp stream into a Node.js Readable stream
   let readableStreamYT = new Readable({
     read() {
       readableStream.on('data', (chunk) => {
         this.push(chunk);  // Push each chunk into the readable stream
       });
+      readableStream.on('end', () => {
+        this.push(null);  // Push null to indicate end of stream
+      });
+      readableStream.on('error', (err) => {
+        this.emit('error', err);  // Emit error if yt-dlp stream fails
+      });
     }
-  });  
+  });
 
-  // Create a new audio player for each song
+  // Join the voice channel
   const connection = joinVoiceChannel({
     channelId: channel.id,
     guildId: message.guild.id,
     adapterCreator: message.guild.voiceAdapterCreator,
   });
 
-  console.log("Próxima ação é rodar a música");
+  console.log("Playing audio from yt-dlp");
 
-  // Create an audio resource from the stream
-  
-  const resource = createAudioResource(readableStreamYT);
+  // Create an audio resource from the yt-dlp stream
+  const resource = createAudioResource(readableStreamYT, {
+    inputType: StreamType.Opus, // Use the Opus format for Discord voice channel
+  });
+
   // Play the audio resource
   audioPlayer.play(resource);
 

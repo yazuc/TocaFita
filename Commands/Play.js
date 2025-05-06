@@ -50,7 +50,7 @@ async function searchVideo(query, message){
       //message.channel.send(`Here's the video you requested: ${videoUrl}`);
       return videoUrl;
       
-    } else {
+  } else {
       message.channel.send('No videos found for the given query.');
     }
   } catch (error) {
@@ -273,6 +273,26 @@ function deleteFile(filePath) {
       }
     });
   });
+
+  const path = require('path');
+  fs.readdir('.', (err, files) => {
+    if (err) {
+      console.error(`Failed to read current directory: ${err}`);
+      return;
+    }
+  
+    files.forEach(file => {
+      if (file.endsWith('.parts')) {
+        fs.unlink(file, unlinkErr => {
+          if (unlinkErr) {
+            console.error(`Error deleting ${file}: ${unlinkErr}`);
+          } else {
+            console.log(`Deleted: ${file}`);
+          }
+        });
+      }
+    });
+  });
 }
 
 async function stopPlayback() {
@@ -310,7 +330,6 @@ async function TocaFita(message){
     }
     //await stopPlayback()
     deleteFile(filePath);
-
     
     // Get the video ID or throw an error
     const videoId = Funcoes.getYouTubeVideoId(videoUrl);
@@ -318,21 +337,25 @@ async function TocaFita(message){
     // const videoInfo = await exec(videoId, {
     //   o: 'custom-name'
     // });
-
+    const start = Date.now();
     console.time('DownloadTime');
     let stdout = await ytDlpWrap.execPromise([
       videoUrl,
+      '--cookies', './cookies.txt',
       '-f', 'worstaudio', 
-      '--limit-rate', '2M',  // Limit the rate to 1MB/s (adjust as needed)
-      '--concurrent-fragments', '16',  // Number of concurrent fragments to download
+      //'--limit-rate', '2M',  // Limit the rate to 1MB/s (adjust as needed)
+      '--concurrent-fragments', '20',  // Number of concurrent fragments to download
       '--no-warnings',  // Disable warnings to prevent unnecessary output
       '--quiet',         // Suppress most output
       '--no-mtime',
       '--no-post-overwrites',  // Skip unnecessary post-processing
       '--no-embed-subs',  // Skip embedding subtitles
       '-o', 'custom-name.mp4'
-    ]);
-    console.timeEnd('DownloadTime');
+    ]); 
+    const end = Date.now();
+    const elapsed = (end-start)/1000;
+    message.reply(`Terminou download em: ${elapsed.toFixed(2)} segundos`);
+    //message.reply("Terminou download em: ${elapsed.toFixed(2)} segundos");
 
     //console.log(videoInfo)
 
