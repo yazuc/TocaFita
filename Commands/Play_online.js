@@ -4,6 +4,7 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } =
 const YTDlpWrap = require('yt-dlp-wrap').default;
 const ytDlpWrap = new YTDlpWrap('./yt-dlp');
 const fs = require('fs');
+const { PassThrough } = require('stream');
 
 const StreamOptions ={
   seek: 0,
@@ -39,26 +40,43 @@ async function TocaFitaOnline(message) {
 
 async function connects(message, channel, query) {
   // Execute yt-dlp to get the audio stream
+
+  const bufferStream = new PassThrough(); // Acts as a buffer
   let readableStream = ytDlpWrap.execStream([
     query,
-    '-f', 'bestaudio',  // Get the best audio quality
-    '--extract-audio',   // Extract audio only (avoid video)
-    '--audio-format', 'opus', // Use opus format for efficient streaming
-  ]);
+    '--cookies', './cookies.txt',
+    '--no-playlist',
+    '--no-cache-dir',
+    '-f', 'bestaudio[ext=m4a]/bestaudio',
+    '--retries', '20',
+    '--fragment-retries', '20',
+    '-N', '2',
+  ])
+  
+  readableStream.pipe(bufferStream);
 
-  // Wrap yt-dlp stream into a Node.js Readable stream
-  let readableStreamYT = new Readable({
-    read() {
-      readableStream.on('data', (chunk) => {
-        this.push(chunk);  // Push each chunk into the readable stream
-      });
-      readableStream.on('end', () => {
-        this.push(null);  // Push null to indicate end of stream
-      });
-      readableStream.on('error', (err) => {
-        this.emit('error', err);  // Emit error if yt-dlp stream fails
-      });
+  // Optional: capture errors from yt-dlp
+  readableStream.on('error', (err) => {
+    console.error('yt-dlp stream error:', err);
+  });
+
+  readableStream.on('close', (code) => {
+    if (code !== 0) {
+      console.warn(`yt-dlp exited with code ${code}, will attempt retry...`);
     }
+  });
+
+  readableStream.on('exit', (code, signal) => {
+    console.warn(`yt-dlp exited with code ${code}, signal ${signal}`);
+    if (code !== 0 && retries < 3) {
+      retries++;
+      console.log(`Retrying download... (${retries})`);
+      tocarMusica(channel, query, message); // retry
+    }
+  });
+  
+  bufferStream.on('end', () => {
+    console.warn('⚠️ bufferStream ended unexpectedly');
   });
 
   // Join the voice channel
@@ -71,9 +89,7 @@ async function connects(message, channel, query) {
   console.log("Playing audio from yt-dlp");
 
   // Create an audio resource from the yt-dlp stream
-  const resource = createAudioResource(readableStreamYT, {
-    inputType: StreamType.Opus, // Use the Opus format for Discord voice channel
-  });
+  const resource = createAudioResource(bufferStream);
 
   // Play the audio resource
   audioPlayer.play(resource);
@@ -83,6 +99,7 @@ async function connects(message, channel, query) {
     console.error('AudioPlayer Error:', error.message);
     message.reply('Ocorreu um erro ao tentar tocar a música.');
   });
+   
 
   // Subscribe the audio player to the connection
   connection.subscribe(audioPlayer);

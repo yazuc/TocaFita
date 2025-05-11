@@ -1,2 +1,2 @@
 @echo off
-scp -r "C:/Users/Leonardo/Documents/discordbot" leo@192.168.0.126:~
+scp -r "C:/Users/Leonardo/Documents/discordbot" leo@192.168.1.11:~

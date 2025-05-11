@@ -34,7 +34,6 @@ const queue = new Queue();
 let LyricsArray = []
 let LyricsIndex = 0;
 const filePath = './Commands/Lyrics.txt';
-console.log("joga os valores no array ")
 LyricsArray = Animals.readLyricsFromFile(filePath);
 const audioFile = './Commands/animals.mp3'; // Replace with the path to your audio file
 
@@ -46,12 +45,11 @@ const audioFile = './Commands/animals.mp3'; // Replace with the path to your aud
 //Para realizar a trocade roles do Fabricio
 client.on('ready', async () => {
   console.log('Bot is ready');
+  Funcoes.debug("objMessage", 'bot is ready')
   client.user.setActivity('sua mae de 4', { type: 'WATCHING' });
-   const channel = client.channels.cache.get(obj.CHANNEL_ID);
+  const channel = client.channels.cache.get(obj.CHANNEL_ID);
 	if (channel) {
-	  channel.send('ESTOU VIVO!!!!')
-	    .then(() => console.log('Message sent!'))
-     .catch(err => console.error('Error sending message:', err));
+	  //channel.send('ESTOU VIVO!!!!').then(() => console.log('Message sent!')).catch(err => console.error('Error sending message:', err));
   } 
   // Schedule the message to be sent at 2:00 PM every day (change the time as needed)
   cron.schedule('16 21 * * *', () => {
@@ -76,6 +74,9 @@ client.on('messageCreate', async (message) => {
 })
 
 client.on('messageCreate', async (message) => {
+  if(message.content.match("!comandos")){
+    message.reply("Lista de comandos com ! na frente: play 'url completa/titulo do vídeo', next, list, restart")
+  }
   if (message.content.match('!play')) {
     if(Play.isPlaying()){  
       message.reply("Entrou para a fila, para ver a fila digite: !list");    
@@ -93,12 +94,6 @@ client.on('messageCreate', async (message) => {
     }else{
       PlayOnline.TocaFitaOnline(message);
     }
-  }
-  if(message.content.match("!stop")){
-    Play.stop();
-  }
-  if(message.content.match("!continue")){
-    Play.continuar();
   }
   if(message.content.match("!next")){
     Funcoes.debug("objMessage", message.toString())

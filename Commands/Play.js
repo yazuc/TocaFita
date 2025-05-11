@@ -5,7 +5,6 @@ const Play = require ('./Play');
 const Queue = require ('./Queue');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');  
-const { exec } = require('youtube-dl-exec');
 const YTDlpWrap = require('yt-dlp-wrap').default;
 const ytDlpWrap = new YTDlpWrap('./yt-dlp');
 const ytSearch = require('yt-search');
@@ -13,8 +12,10 @@ const fs = require('fs');
 const audioPlayer = createAudioPlayer();
 const filePath = `./custom-name.mp4`;
 const path = require('path');
+const { exec } = require('child_process');
 
 var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
+let connection = null;
 
 
 //Instancia a API do discord
@@ -88,6 +89,22 @@ function enqueue(message) {
 
   return queue;
 }
+function PythonExec(query){    
+    const outputPath = '~/discordbot';
+    
+    const command = `bash -c "source venv/bin/activate && python ytdlp-wraper.py -o '${outputPath}' '${query}'"`;
+    
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`❌ Error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.error(`⚠️ STDERR: ${stderr}`);
+      }
+      console.log(`✅ STDOUT:\n${stdout}`);
+    });
+}
 
 
 async function downloadNext() {
@@ -111,10 +128,10 @@ async function downloadNext() {
 
 
 async function onIdle(){
-  console.log("aplicou on idle")
   audioPlayer.on('idle', () => {
     console.log("está idle")
       if(queue.isEmpty()){
+        deleteFile(filePath)
         //audioPlayer.destroy();
       }else{
         tocaProxima()
@@ -124,15 +141,9 @@ async function onIdle(){
 
 async function tocaProxima(message) {
   if (queue.size() > 0) {
-    console.log(queue);
+    //console.log(queue);
 
-    // Move next.webm to custom-name.webm
     stop();
-    // try {
-    //   await fs.rename('./discordbot/next.webm', './discordbot/custom-name.webm');
-    // } catch (e) {
-    //   console.warn('next.webm not found. Will download normally.');
-    // }
 
     if (message != undefined)
       message.reply("Tocando próxima na lista: " + queue.peek().content.split(/!play\s+/i)[1]);
@@ -240,7 +251,7 @@ function PlayLocal(audioPlayer, streamObj){
  * @param streamObj - objeto criado para realizar o streaming do video em opus
  * */ 
 function connects(message, channel, streamObj, audioPlayer){
-    const connection = joinVoiceChannel({
+     connection = joinVoiceChannel({
         channelId: channel.id,
         guildId: message.guild.id,
         adapterCreator: message.guild.voiceAdapterCreator,
@@ -323,6 +334,8 @@ async function TocaFita(message){
     const query = args.slice(1).join(' ');
     let videoUrl = await searchVideo(query, message);        
     message.reply('Música encontrada: ' + videoUrl);    
+
+    //PythonExec(query);
 
     if(audioPlayer.state.status === AudioPlayerStatus.Playing){
       stop();

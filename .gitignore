@@ -1,9 +1,12 @@
 appconfig.json
+cookies.txt
 .env
 .env
 .env
 .env
 node_modules/ 
+venv/
+./cookies.txt
 ./node_modules
 custom-name.webm
 custom-name
@@ -2448,3 +2451,6 @@ Jojo's Vento Aureo OP 2 V3 - Giorno Giovanna Ver. \[tcK3qP85I3M].webm
 video.mp4
 next.webm
 objMessage
+cookies.txt
+cookies.txt
+cookies.txt
