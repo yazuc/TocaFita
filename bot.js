@@ -80,10 +80,11 @@ client.on('messageCreate', async (message) => {
   if (message.content.match('!play')) {
     if(Play.isPlaying()){  
       message.reply("Entrou para a fila, para ver a fila digite: !list");    
-      console.log(Play.enqueue(message))
+      Play.enqueue(message)
     }else{
       console.time("Tempo para TocaFita")
       message.reply("Recebi a música e já retorno ela seu ansioso.")
+      //Play.enqueue(message);
       Play.TocaFita(message);
       console.timeEnd("Tempo para TocaFita")
     }

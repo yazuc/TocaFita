@@ -12,10 +12,11 @@ const fs = require('fs');
 const audioPlayer = createAudioPlayer();
 const filePath = `./custom-name.mp4`;
 const path = require('path');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 
 var obj = JSON.parse(fs.readFileSync('./appconfig.json', 'utf8'));
 let connection = null;
+let loop = false;
 
 
 //Instancia a API do discord
@@ -89,20 +90,24 @@ function enqueue(message) {
 
   return queue;
 }
+
 function PythonExec(query){    
     const outputPath = '~/discordbot';
     
-    const command = `bash -c "source venv/bin/activate && python ytdlp-wraper.py -o '${outputPath}' '${query}'"`;
+    const ytdlp = spawn('./yt-dlp', ['-o', '-', query]);    
     
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`❌ Error: ${error.message}`);
-        return;
-      }
-      if (stderr) {
-        console.error(`⚠️ STDERR: ${stderr}`);
-      }
-      console.log(`✅ STDOUT:\n${stdout}`);
+    ytdlp.stdout.on('data', (chunk) => {
+    console.log('Received data chunk of length:', chunk.length);
+      // You can pipe this to a stream (e.g., ffmpeg, voice connection, etc.)
+    });
+
+    // Handle errors
+    ytdlp.stderr.on('data', (data) => {
+      console.error(`yt-dlp stderr: ${data}`);
+    });
+
+    ytdlp.on('close', (code) => {
+      console.log(`yt-dlp process exited with code ${code}`);
     });
 }
 
@@ -130,6 +135,9 @@ async function downloadNext() {
 async function onIdle(){
   audioPlayer.on('idle', () => {
     console.log("está idle")
+      if(loop){
+        
+      }
       if(queue.isEmpty()){
         deleteFile(filePath)
         //audioPlayer.destroy();

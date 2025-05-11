@@ -41,68 +41,50 @@ async function TocaFitaOnline(message) {
 async function connects(message, channel, query) {
   // Execute yt-dlp to get the audio stream
 
-  const bufferStream = new PassThrough(); // Acts as a buffer
-  let readableStream = ytDlpWrap.execStream([
-    query,
-    '--cookies', './cookies.txt',
-    '--no-playlist',
-    '--no-cache-dir',
-    '-f', 'bestaudio[ext=m4a]/bestaudio',
-    '--retries', '20',
-    '--fragment-retries', '20',
-    '-N', '2',
-  ])
-  
-  readableStream.pipe(bufferStream);
+    const stream = () => {
+      const passThrough = new PassThrough();
 
-  // Optional: capture errors from yt-dlp
-  readableStream.on('error', (err) => {
-    console.error('yt-dlp stream error:', err);
-  });
+      const ytDlpProcess = ytDlpWrap.execStream([
+        query,
+        '--cookies', './cookies.txt',
+        '--no-playlist',
+        '--no-cache-dir',
+        '-f', 'bestaudio[ext=m4a]/bestaudio',
+        '--retries', '20',
+        '--fragment-retries', '20',
+        '-N', '2',
+        '-o', '-', // stream to stdout
+      ]);
 
-  readableStream.on('close', (code) => {
-    if (code !== 0) {
-      console.warn(`yt-dlp exited with code ${code}, will attempt retry...`);
-    }
-  });
+      ytDlpProcess.pipe(passThrough);
 
-  readableStream.on('exit', (code, signal) => {
-    console.warn(`yt-dlp exited with code ${code}, signal ${signal}`);
-    if (code !== 0 && retries < 3) {
-      retries++;
-      console.log(`Retrying download... (${retries})`);
-      tocarMusica(channel, query, message); // retry
-    }
-  });
-  
-  bufferStream.on('end', () => {
-    console.warn('⚠️ bufferStream ended unexpectedly');
-  });
+      ytDlpProcess.on('error', (err) => {
+        console.error('yt-dlp stream error:', err);
+      });
 
-  // Join the voice channel
-  const connection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: message.guild.id,
-    adapterCreator: message.guild.voiceAdapterCreator,
-  });
+      ytDlpProcess.on('close', (code) => {
+        console.warn(`yt-dlp exited with code ${code}`);
+        if (code !== 0 && retries < 3) {
+          retries++;
+          console.log(`Retrying download... (${retries})`);
+          return connects(message, channel, query); // Retry logic
+        }
+      });
 
-  console.log("Playing audio from yt-dlp");
+      return passThrough;
+    }; 
+    // Join the voice channel
+    const connection = joinVoiceChannel({
+      channelId: channel.id,
+      guildId: message.guild.id,
+      adapterCreator: message.guild.voiceAdapterCreator,
+    });
 
-  // Create an audio resource from the yt-dlp stream
-  const resource = createAudioResource(bufferStream);
+    const audioStream = stream();
+    const resource = createAudioResource(audioStream);
 
-  // Play the audio resource
-  audioPlayer.play(resource);
-
-  // Error handling for the audio player
-  audioPlayer.on('error', (error) => {
-    console.error('AudioPlayer Error:', error.message);
-    message.reply('Ocorreu um erro ao tentar tocar a música.');
-  });
-   
-
-  // Subscribe the audio player to the connection
-  connection.subscribe(audioPlayer);
+    audioPlayer.play(resource);
+    connection.subscribe(audioPlayer);
 }
 
 module.exports = {
