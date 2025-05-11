@@ -91,26 +91,6 @@ function enqueue(message) {
   return queue;
 }
 
-function PythonExec(query){    
-    const outputPath = '~/discordbot';
-    
-    const ytdlp = spawn('./yt-dlp', ['-o', '-', query]);    
-    
-    ytdlp.stdout.on('data', (chunk) => {
-    console.log('Received data chunk of length:', chunk.length);
-      // You can pipe this to a stream (e.g., ffmpeg, voice connection, etc.)
-    });
-
-    // Handle errors
-    ytdlp.stderr.on('data', (data) => {
-      console.error(`yt-dlp stderr: ${data}`);
-    });
-
-    ytdlp.on('close', (code) => {
-      console.log(`yt-dlp process exited with code ${code}`);
-    });
-}
-
 
 async function downloadNext() {
   if (queue.size() >= 1) {
