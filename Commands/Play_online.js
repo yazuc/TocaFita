@@ -132,6 +132,8 @@ async function connects(message, channel, query) {
           message.reply('Falha ao baixar o áudio com yt-dlp.');
         }
       });
+      
+    const resource = createAudioResource(bufferStream);
    
     // Join the voice channel
     const connection = joinVoiceChannel({
@@ -140,10 +142,9 @@ async function connects(message, channel, query) {
       adapterCreator: message.guild.voiceAdapterCreator,
     });
 
-    const resource = createAudioResource(bufferStream);
     audioPlayer.play(resource);
     connection.subscribe(audioPlayer);
-  }
+}
 
 module.exports = {
   TocaFitaOnline
