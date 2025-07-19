@@ -39,6 +39,7 @@ const highWaterMarkBytes = 32 * 1024 * 1024 * 1024;
  * @param query - parametro de busca na youtube api para retornar o url do video
  * @param message - objeto mensagem gerado pela api do discord quando um usuário digita algo
  * */ 
+
 async function searchVideo(query, message){
   try {
     // Search for videos based on the query
@@ -120,7 +121,9 @@ async function onIdle(){
       }
       if(queue.isEmpty()){
         deleteFile(filePath)
-        //audioPlayer.destroy();
+        //audioPlayer.destroy();        
+        if(connection != null)
+          connection.destroy()
       }else{
         tocaProxima()
       }
@@ -196,8 +199,6 @@ async function streamVideo(channel, message, audioPlayer){
       // Get the output from FFmpeg
       const stream = ffmpegProcess.stdout;
 
-    // const stream = ytdl(videoId, { filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1 << 25 });
-
     if (!channel) {
       return message.reply('Voice channel not found.');
     }
@@ -252,6 +253,7 @@ function connects(message, channel, streamObj, audioPlayer){
       audioPlayer.on('error', (error) => {      
         console.error('AudioPlayer Error:', error.message);
       });
+
 
       // Subscribe the audio player to the connection
       connection.subscribe(audioPlayer);
@@ -320,6 +322,9 @@ async function TocaFita(message){
     }
 
     const query = args.slice(1).join(' ');
+
+    // let formatQuery = query.substr(0, query.search("&"));
+    // console.log(formatQuery)
     let videoUrl = await searchVideo(query, message);        
     message.reply('Música encontrada: ' + videoUrl);    
 
@@ -342,17 +347,17 @@ async function TocaFita(message){
     console.time('DownloadTime');
     let stdout = await ytDlpWrap.execPromise([
       videoUrl,
-      '--cookies', './cookies.txt',
-      '-f', 'worstaudio', 
-      //'--limit-rate', '2M',  // Limit the rate to 1MB/s (adjust as needed)
-      '--concurrent-fragments', '20',  // Number of concurrent fragments to download
+      '-S', 'proto', // 'proto' without quotes around it
+      '--extractor-args', 'youtube:player_skip=webpage,configs,js;player_client=android,web',
+      '--concurrent-fragments', '12',  // Number of concurrent fragments to download
       '--no-warnings',  // Disable warnings to prevent unnecessary output
       '--quiet',         // Suppress most output
       '--no-mtime',
       '--no-post-overwrites',  // Skip unnecessary post-processing
       '--no-embed-subs',  // Skip embedding subtitles
       '-o', 'custom-name.mp4'
-    ]); 
+    ]);
+
     const end = Date.now();
     const elapsed = (end-start)/1000;
     message.reply(`Terminou download em: ${elapsed.toFixed(2)} segundos`);
