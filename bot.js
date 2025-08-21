@@ -31,8 +31,7 @@ const client = new Client({ intents: [
 //Para realizar a trocade roles do Fabricio
 client.on('ready', async () => {
   console.log('Bot is ready');
-  Funcoes.debug("objMessage", 'bot is ready')
-  client.user.setActivity('sua mae de 4', { type: 'WATCHING' });
+  //Funcoes.debug("objMessage", 'bot is ready')
   const channel = client.channels.cache.get(obj.CHANNEL_ID);
 	if (channel) {
 	  //channel.send('ESTOU VIVO!!!!').then(() => console.log('Message sent!')).catch(err => console.error('Error sending message:', err));
@@ -58,7 +57,7 @@ client.on('messageCreate', async (message) => {
   }
   if (message.content.match('!op')) {
     if(Play.isPlaying()){      
-      console.log(Play.enqueue(message))
+      Play.enqueue(message)
     }else{
       PlayOnline.TocaFitaOnline(message);
     }

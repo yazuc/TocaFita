@@ -322,54 +322,43 @@ async function TocaFita(message){
     }
 
     const query = args.slice(1).join(' ');
-
-    // let formatQuery = query.substr(0, query.search("&"));
-    // console.log(formatQuery)
-    let videoUrl = await searchVideo(query, message);        
+    if(query.includes("?t=") > 0){
+    	return message.reply('vai toma no cu tira essa merda de ?t=');
+    }
+    let formatQuery = query.search("&") != -1 ? query.split("&")[0] : query;
+     //formatQuery = query.search("?t=") != -1 ? query.split("?t=")[0] : query;
+    console.log(formatQuery)
+    let videoUrl = await searchVideo(formatQuery, message);        
     message.reply('Música encontrada: ' + videoUrl);    
-
-    //PythonExec(query);
 
     if(audioPlayer.state.status === AudioPlayerStatus.Playing){
       stop();
       console.log("musica está tocando, adicionando na queue");
     }
-    //await stopPlayback()
+
     deleteFile(filePath);
     
-    // Get the video ID or throw an error
-    const videoId = Funcoes.getYouTubeVideoId(videoUrl);
-
-    // const videoInfo = await exec(videoId, {
-    //   o: 'custom-name'
-    // });
     const start = Date.now();
     console.time('DownloadTime');
     let stdout = await ytDlpWrap.execPromise([
       videoUrl,
-      '-S', 'proto', // 'proto' without quotes around it
-      '--extractor-args', 'youtube:player_skip=webpage,configs,js;player_client=android,web',
-      '--concurrent-fragments', '12',  // Number of concurrent fragments to download
-      '--no-warnings',  // Disable warnings to prevent unnecessary output
-      '--quiet',         // Suppress most output
+      '--cookies', '../cookies.txt',
+      '--extractor-args', 'youtube:player_skip=configs,js,ios;player_client=webpage,android,web',
+      '--concurrent-fragments', '12',  
+      '--no-warnings',  
+      '--no-colors',
+      '--quiet',
       '--no-mtime',
-      '--no-post-overwrites',  // Skip unnecessary post-processing
-      '--no-embed-subs',  // Skip embedding subtitles
+      '--no-post-overwrites',
+      '--no-embed-subs',
       '-o', 'custom-name.mp4'
     ]);
 
     const end = Date.now();
     const elapsed = (end-start)/1000;
     message.reply(`Terminou download em: ${elapsed.toFixed(2)} segundos`);
-    //message.reply("Terminou download em: ${elapsed.toFixed(2)} segundos");
-
-    //console.log(videoInfo)
-
     var voiceid = message.member.voice.channelId;
-
     const channel = message.guild.channels.cache.get(voiceid);
-    console.log(voiceid)
-    console.log(channel)
     if (!channel) {
       return message.reply('Voice channel not found.');
     }
