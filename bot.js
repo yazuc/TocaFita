@@ -29,7 +29,7 @@ const client = new Client({ intents: [
 
 //Método watcher, serve para mostrar que o bot está ativo, e para setar o evento marcado as 13:20
 //Para realizar a trocade roles do Fabricio
-client.on('ready', async () => {
+client.on('clientReady', async () => {
   console.log('Bot is ready');
   //Funcoes.debug("objMessage", 'bot is ready')
   const channel = client.channels.cache.get(obj.CHANNEL_ID);

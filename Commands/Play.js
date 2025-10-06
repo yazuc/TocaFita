@@ -120,10 +120,10 @@ async function onIdle(){
         
       }
       if(queue.isEmpty()){
-        deleteFile(filePath)
+        //deleteFile(filePath)
         //audioPlayer.destroy();        
-        if(connection != null)
-          connection.destroy()
+        // if(connection != null)
+        //   connection.destroy()
       }else{
         tocaProxima()
       }
@@ -226,12 +226,22 @@ function PlayLocal(audioPlayer, streamObj){
       console.error("Invalid stream object provided.");
       return;
     }    
+
+    const resource = createAudioResource(
+      fs.createReadStream(filePath),
+      { inputType: StreamType.Arbitrary }
+    );
     const audioResource = createAudioResource(streamObj);
-    audioPlayer.play(audioResource);
+    audioPlayer.play(resource);
+
     console.log("começou a tocar")
-    console.log(audioPlayer.state.status)
+    audioPlayer.on('stateChange', (oldState, newState) => {
+        console.log(audioPlayer)
+        console.log(audioResource)
+        console.log(`[AudioPlayer] ${oldState.status} → ${newState.status}`);
+    });
     //onIdle();
-    //console.log(audioPlayer)
+    // console.log(audioPlayer)
 }
 
 /**     
@@ -248,15 +258,13 @@ function connects(message, channel, streamObj, audioPlayer){
 
       console.log("próxima ação é rodar a música")
       
+      connection.subscribe(audioPlayer);
       PlayLocal(audioPlayer, streamObj);
-
+      
       audioPlayer.on('error', (error) => {      
         console.error('AudioPlayer Error:', error.message);
       });
-
-
-      // Subscribe the audio player to the connection
-      connection.subscribe(audioPlayer);
+                  
 }
 
 function deleteFile(filePath) {
@@ -336,7 +344,7 @@ async function TocaFita(message){
       console.log("musica está tocando, adicionando na queue");
     }
 
-    deleteFile(filePath);
+    // deleteFile(filePath);
     
     const start = Date.now();
     console.time('DownloadTime');
